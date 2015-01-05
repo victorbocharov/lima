@@ -1,2 +1,3 @@
 this file will host fake updates
 update 01
+update 02
