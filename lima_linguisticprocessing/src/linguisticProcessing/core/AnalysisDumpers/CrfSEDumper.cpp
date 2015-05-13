@@ -19,7 +19,7 @@
 #include <queue>
 
 using namespace std;
-using namespace boost;
+//using namespace boost;
 using namespace boost::tuples;
 using namespace Lima::Common::XMLConfigurationFiles;
 using namespace Lima::Common::MediaticData;
