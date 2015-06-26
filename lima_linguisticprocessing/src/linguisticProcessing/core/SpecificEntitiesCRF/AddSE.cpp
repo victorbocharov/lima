@@ -116,7 +116,7 @@ AnalysisGraph* anagraph=static_cast<AnalysisGraph*>(analysis.getData("AnalysisGr
   match.setType(Common::MediaticData::MediaticData::single().getEntityType(Common::Misc::utf8stdstring2limastring(type)));
   // set normalized form similar to string (otherwise, may cause problem when trying to access the created specific entity)
 
-  match.features().addFeature(DEFAULT_ATTRIBUTE,Common::Misc::utf8stdstring2limastring(str));
+  match.features().setFeature(DEFAULT_ATTRIBUTE,Common::Misc::utf8stdstring2limastring(str));
  
   // create specific entity from RecognizerMatch using default action
   Lima::LinguisticProcessing::SpecificEntities::CreateSpecificEntity createEntity(lg);
