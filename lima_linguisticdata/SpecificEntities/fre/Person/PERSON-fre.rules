@@ -41,6 +41,7 @@ Barack::Obama:PERSON:
 =<ClearEntityFeatures()
 
 # generic rule for components with stop condition
+<<<<<<< HEAD
 @Firstname:(@Title|@FunctionTitle)?:(@Firstname|@Initial|t_abbrev)? (@particule? @PersonNamePart){1-2} [($DET|$PRON|$ADJ|$V)]:PERSON:
 =>SetEntityFeature(left,"title")
 =>SetEntityFeature(trigger,"firstname")
@@ -51,28 +52,15 @@ Barack::Obama:PERSON:
 =<ClearEntityFeatures()
 
 # generic rule for components without stop condition
+<<<<<<< HEAD
 @Firstname:(@Title|@FunctionTitle)?:(@Firstname|@Initial|t_abbrev)? (@particule? @PersonNamePart){1-2}:PERSON:
 =>SetEntityFeature(left,"title")
 =>SetEntityFeature(trigger,"firstname")
 =>AddEntityFeature(right.1,"firstname")
-=>SetEntityFeature(right.2.1,"lastname")
+=>AppendEntityFeature(right.2.1,"lastname")
 =>AppendEntityFeature(right.2.2,"lastname")
 =>NormalizeEntity()
 =<ClearEntityFeatures()
-
-# rule firstname components
-# OME @Firstname:[(@Title|@FunctionTitle)?]:(@Initial|t_abbrev)? (@particule? @PersonNamePart){1-2}:PERSON:
-# OME +SetEntityFeature(trigger.1,"firstname")
-# OME +SetEntityFeature(left.1,"title")
-# OME +AppendEntityFeature(right.1.1,"firstname")
-# OME +AppendEntityFeature(right.1.2,"firstname")
-# OME +SetEntityFeature(right.2.1,"lastname")
-# OME +AppendEntityFeature(right.2.2,"lastname")
-# OME =>NormalizeEntity()
-# OME =<ClearEntityFeatures()
-# OME # =>NormalizePerson()
-# OME #+SetEntityFeature(right.2.1,right.2.2,"lastname")
-# OME # +SetEntityFeature(right.2.2,"lastname")
 
 # OME @PersonNamePart:[(@Title|@FunctionTitle)]:(@PersonNamePart){0-2}:PERSON:=>NormalizePersonName()
 
