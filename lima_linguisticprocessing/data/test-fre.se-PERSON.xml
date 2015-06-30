@@ -98,7 +98,6 @@
           right="Monge"/>
   </testcase>
   <testcase id="fre.se.pers.comp.3" type="pertinent">
-  <testcase id="fre.se.pers.comp.3" type="pertinent">
     <call-parameters>
       <param key="text" value="le président Ambroise de Monge"/>
       <param key="language" value="fre"/>
