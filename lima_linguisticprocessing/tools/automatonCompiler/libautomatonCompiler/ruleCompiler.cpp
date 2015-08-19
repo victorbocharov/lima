@@ -61,7 +61,9 @@ LimaString initRule(Rule& r,
                      uint64_t lineNumber) {
 
   AUCLOGINIT;
+#ifdef DEBUG_LP
   LDEBUG << "RuleCompiler:initializing rule " << str;
+#endif
 
   //LimaString ruleString;
   RuleString s(str,language,gazeteers,subAutomatons);
@@ -146,7 +148,9 @@ LimaString initRule(Rule& r,
   r.setNormalizedForm(s.getNorm());
   ostringstream oss;
   oss << filename << ":" << lineNumber;
+#ifdef DEBUG_LP
   LDEBUG << "rule id is '" << oss.str() << "' / filename="<< filename << ",lineNumber=" << lineNumber;
+#endif
   r.setRuleId(oss.str());
 
   return str;

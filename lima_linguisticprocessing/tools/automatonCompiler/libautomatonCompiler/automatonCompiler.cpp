@@ -101,15 +101,19 @@ Tstate buildAutomaton(Automaton& a,
                       MediaId language,
                       const std::vector<LimaString>& activeEntityGroups) {
   
+#ifdef DEBUG_LP
   AUCLOGINIT;
   LDEBUG << "build automaton from " << automatonString.getString() << " with id " << currentId;
+#endif
 
   if (automatonString.isOptional()) {
 
     int min=automatonString.getMinOccurrences();
     int max=automatonString.getMaxOccurrences();
 
+#ifdef DEBUG_LP
     LDEBUG << "automaton is optional {"<<min<<"-"<<max<< "}";
+#endif
 
     Tstate finalState=initialState;
 
@@ -170,12 +174,16 @@ Tstate buildAutomatonNotOptional(Automaton& a,
                                  MediaId language,
                                  const std::vector<LimaString>& activeEntityGroups) 
 {
+#ifdef DEBUG_LP
   AUCLOGINIT;
   LDEBUG << "build non-optional automaton from " << automatonString.getString() << " with id " << initialId;
-  
+  #endif
+
   //-------------------------- alternative ------------------------------
   if (automatonString.isAlternative()) {
+#ifdef DEBUG_LP
     LDEBUG << "is alternative ";
+#endif
     Tstate finalState=a.addState(); // the final state to which all 
                                     // options will converge
     std::string currentId(initialId);
@@ -191,7 +199,9 @@ Tstate buildAutomatonNotOptional(Automaton& a,
   }
   //----------------------------- sequence ------------------------------
   else if (automatonString.isSequence()) {
+#ifdef DEBUG_LP
     LDEBUG << "is sequence ";
+#endif
     std::vector<AutomatonString>::const_iterator
       it=automatonString.getParts().begin(),
       it_end=automatonString.getParts().end();
@@ -209,7 +219,9 @@ Tstate buildAutomatonNotOptional(Automaton& a,
   }
   //-------------------------- simple unit ------------------------------
   else if (automatonString.isUnit()) {
+#ifdef DEBUG_LP
     LDEBUG << "is unit ";
+#endif
     TransitionUnit *t = createTransition(automatonString,language,initialId,activeEntityGroups);
     if (t != 0) {
       Tstate finalState = a.addState();
