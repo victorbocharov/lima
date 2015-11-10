@@ -9,9 +9,11 @@
       <list name="available">
         <item value="eng" />
         <item value="fre" />
+        <item value="fas" />
       </list>
       <param key="eng" value="lima-lp-eng.xml" />
       <param key="fre" value="lima-lp-fre.xml" />
+      <param key="fas" value="lima-lp-fas.xml" />
     </group>
     <group name="pipelines">
       <!-- chaque map represente 1 pipeline "general", qui est decline selon les media. -->
@@ -19,6 +21,12 @@
       <!-- l'attribut 'name' de la map est l'identifiant du pipeline. C'est cet identifiant qu'il faut
            donner au client d'analyse pour utiliser ce pipeline -->
 
+      <!-- The extra pipeline is a pipeline used for experimentations about rapid developping of ressources for an extra language -->
+      <map name="extra">
+        <entry key="eng" value="main"/>
+        <entry key="fre" value="main"/>
+        <entry key="fas" value="main"/>
+      </map>
       <!-- The main pipeline is a pipeline used for experimentations. For a stabilized process,
       please use one of the others below -->
       <map name="main">

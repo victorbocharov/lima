@@ -13,16 +13,18 @@
       <list name="available">
         <item value="eng" />
         <item value="fre" />
+        <item value="fas" />
       </list>
     </group>
     <group name="mediasIds">
       <param key="fre" value="5"/>
       <param key="eng" value="6"/>
-
+      <param key="fas" value="101"/>
     </group>
     <group name="mediaDefinitionFiles">
       <param key="eng" value="lima-common-eng.xml" />
       <param key="fre" value="lima-common-fre.xml" />
+      <param key="fas" value="lima-common-fas.xml" />
     </group>
 
     <group name="stringPool">

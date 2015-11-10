@@ -14,14 +14,9 @@
 #
 #   You should have received a copy of the GNU Affero General Public License
 #   along with LIMA.  If not, see <http://www.gnu.org/licenses/>
-
-########### install files ###############
-
-install(FILES  
-  log4cpp.properties
-  lima-analysis.xml
-  lima-common-eng.xml
-  lima-common-fre.xml
-  lima-common-fas.xml
-  lima-common.xml
-  DESTINATION share/config/lima)
+# file(GLOB CODES_FILES_LIST "${CMAKE_CURRENT_SOURCE_DIR}/symbolicCode-fre.xml")
+# from fre CODES(fre ${CMAKE_CURRENT_SOURCE_DIR}/symbolicCode-fas.xml)
+# CODES(fre ${CMAKE_CURRENT_SOURCE_DIR}/symbolicCode-fas.xml)
+# from eng
+file(GLOB CODES_FILES_LIST "${CMAKE_CURRENT_SOURCE_DIR}/symbolicCode*.xml")
+CODES(fas ${CODES_FILES_LIST})
