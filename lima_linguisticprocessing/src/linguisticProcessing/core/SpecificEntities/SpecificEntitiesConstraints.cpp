@@ -462,7 +462,7 @@ bool CreateSpecificEntity::operator()(Automaton::RecognizerMatch& match,
   }
   newToken->setStatus(tokenMap[head]->status());
 
-  if (newMorphData->empty())
+/*  if (newMorphData->empty())
   {
     SELOGINIT;
     LERROR << "CreateSpecificEntity::operator() Found no morphosyntactic  data for new vertex. Abort.";
@@ -471,6 +471,7 @@ bool CreateSpecificEntity::operator()(Automaton::RecognizerMatch& match,
     assert(false);
     return false;
   }
+  */
 //   LDEBUG << "    Updating morphologic graph "<< graphId;
   // creer le noeud et ses 2 arcs
   LinguisticGraphVertex newVertex;
