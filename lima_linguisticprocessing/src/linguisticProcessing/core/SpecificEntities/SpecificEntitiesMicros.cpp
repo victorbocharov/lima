@@ -77,7 +77,7 @@ init(GroupConfigurationStructure& unitConfiguration,
         LinguisticCode code = microManager.getPropertyValue(*micro);
         if (code == 0) {
           SELOGINIT;
-          LERROR << "SpecificEntitiesMicros::init on entity" << entityName << "," << *micro << "linguistic code is not defined for language" << MediaticData::single().getMediaId(language);
+          LWARN << "SpecificEntitiesMicros::init on entity" << entityName << "," << *micro << "linguistic code is not defined for language" << MediaticData::single().getMediaId(language);
         }
         else {
 #ifdef DEBUG_LP
@@ -101,9 +101,10 @@ getMicros(const EntityType& type)
   map<EntityType,set<LinguisticCode> >::const_iterator it=m_micros.find(type);
   if (it==m_micros.end()) {
     SELOGINIT;
-    LERROR << "no microcategories defined for type " << type << " (" 
+    LWARN << "no microcategories defined for type " << type << " (" 
            << Common::Misc::limastring2utf8stdstring(Common::MediaticData::MediaticData::single().getEntityName(type)) 
            << ")";
+    return &m_defaultMicros;
     throw LimaException( (QString("no microcategories defined for type ")
            + Common::MediaticData::MediaticData::single().getEntityName(type)).toUtf8().constData() );
   }

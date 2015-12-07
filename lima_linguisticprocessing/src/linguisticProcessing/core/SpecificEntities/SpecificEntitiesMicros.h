@@ -58,6 +58,7 @@ class LIMA_SPECIFICENTITIES_EXPORT SpecificEntitiesMicros : public AbstractResou
 
  private:
   std::map<Common::MediaticData::EntityType,std::set<LinguisticCode> > m_micros;
+  std::set<LinguisticCode> m_defaultMicros;
 
 };
 
