@@ -72,11 +72,29 @@
       <list name="processUnitSequence">
         <item value="flattokenizer"/>
         <item value="simpleWord"/>
-        <item value="hyphenWordAlternatives"/>
         <item value="idiomaticAlternatives"/>
+        <item value="hyphenWordAlternatives"/>
+        <item value="abbreviationSplitAlternatives"/>
         <item value="defaultProperties"/>
         <item value="SpecificEntitiesModexForLimaserver"/>
         <item value="specificEntitiesXmlLoggerForLimaserver"/>
+      </list>
+    </group>
+    <group name="limaNLPserver" class="ProcessUnitPipeline" >
+      <list name="processUnitSequence">
+        <item value="flattokenizer"/>
+        <item value="simpleWord"/>
+        <item value="idiomaticAlternatives"/>
+        <item value="hyphenWordAlternatives"/>
+        <item value="abbreviationSplitAlternatives"/>
+        <item value="defaultProperties"/>
+        <item value="SpecificEntitiesModexForLimaserver"/>
+        <item value="specificEntitiesXmlLoggerForLimaserver"/>
+        <item value="viterbiPostagger-freq"/>
+        <item value="disambiguatedGraphXmlLogger"/>
+        <item value="sentenceBoundariesFinder"/>
+        <item value="sentenceBoundariesXmlLogger"/>
+        <!--item value="limaserverHandler"/-->
       </list>
     </group>
     <group name="query" class="ProcessUnitPipeline">

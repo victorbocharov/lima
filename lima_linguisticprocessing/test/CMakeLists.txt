@@ -20,6 +20,7 @@ add_subdirectory(testAnnotationGraphs)
 add_subdirectory(perlTCPClientServer)
 if (QHTTPSERVER_FOUND)
 add_subdirectory(limaServer)
+add_subdirectory(NLPServer)
 endif()
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/src )
