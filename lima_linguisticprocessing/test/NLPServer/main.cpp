@@ -105,7 +105,6 @@ int main(int argc, char **argv)
   fileName.append("/").append(limaNLPServerConfigFile);
   XMLConfigurationFileParser configLimaServer(fileName);
   quint16 port = DEFAULT_PORT;
-  std::cout << "main: before, port = " << port << std::endl;
   if (varMap.count("port")) {
     port = optional_port;
   }
@@ -125,14 +124,13 @@ int main(int argc, char **argv)
       qDebug() << "http-server/address/port parameter not defined in config file. Using default port" << DEFAULT_PORT;
     }
   }
-  std::cout << "main: after, port = " << port << std::endl;
+  std::cout << "main: port = " << port << std::endl;
 
   // analyzer languages
   {
     std::ostringstream oss;
     std::ostream_iterator<std::string> out_it (oss,", ");
     std::copy ( languages.begin(), languages.end(), out_it );
-    std::cout << "main: before, languages = " << oss.str() << std::endl;
   }
   std::deque<std::string> langs;
   if (varMap.count("language")) {
@@ -159,7 +157,7 @@ int main(int argc, char **argv)
     std::ostringstream oss;
     std::ostream_iterator<std::string> out_it (oss,", ");
     std::copy ( langs.begin(), langs.end(), out_it );
-    std::cout << "main: after, langs = " << oss.str() << std::endl;
+    std::cout << "main: langs = " << oss.str() << std::endl;
   }
 
   // analyzer pipelines
@@ -169,7 +167,6 @@ int main(int argc, char **argv)
     std::ostringstream oss;
     std::ostream_iterator<std::string> out_it (oss,", ");
     std::copy ( pipes.begin(), pipes.end(), out_it );
-    std::cout << "main: before, pipes = " << oss.str() << std::endl;
   }
   if (varMap.count("pipelines")) {
     if( !pipelines.empty() ) {
@@ -195,7 +192,7 @@ int main(int argc, char **argv)
     std::ostringstream oss;
     std::ostream_iterator<std::string> out_it (oss,", ");
     std::copy ( pipes.begin(), pipes.end(), out_it );
-    std::cout << "main: after, pipes = " << oss.str() << std::endl;
+    std::cout << "main: pipes = " << oss.str() << std::endl;
   }
 
   QTimer t;
