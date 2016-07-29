@@ -124,6 +124,7 @@ LimaNLPServer::LimaNLPServer( const std::string& configDir,
   LDEBUG << "LimaNLPServer::LimaNLPServer: createClient...";
   m_analyzer = std::dynamic_pointer_cast<AbstractLinguisticProcessingClient>(LinguisticProcessingClientFactory::single().createClient(clientId));
   
+  // initialize HTTPserver
   LDEBUG << "LimaNLPServer::LimaNLPServer: create QHttpServer...";
   m_server = new QHttpServer(this);
   LDEBUG << "LimaNLPServer::LimaNLPServer: connect...";
@@ -152,6 +153,8 @@ void LimaNLPServer::quit() {
 
 void LimaNLPServer::handleRequest(QHttpRequest *req, QHttpResponse *resp)
 {
+  // Handle request
+  // TODO: handle pool of threads...
   CORECLIENTLOGINIT;
   req->storeBody();
   LDEBUG << "LimaNLPServer::handleRequest: create AnalysisThread...";
