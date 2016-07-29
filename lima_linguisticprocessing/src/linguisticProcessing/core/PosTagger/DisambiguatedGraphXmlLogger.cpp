@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 #include "DisambiguatedGraphXmlLogger.h"
+#include "DisambiguatedGraphXmlFormatter.h"
 #include "common/AbstractFactoryPattern/SimpleFactory.h"
 #include "linguisticProcessing/core/LinguisticProcessors/LinguisticMetaData.h"
 #include "linguisticProcessing/core/LinguisticResources/LinguisticResources.h"
@@ -62,7 +63,9 @@ DisambiguatedGraphXmlLogger::DisambiguatedGraphXmlLogger()
 
 
 DisambiguatedGraphXmlLogger::~DisambiguatedGraphXmlLogger()
-{}
+{
+  delete m_formatter;
+}
 
 void DisambiguatedGraphXmlLogger::init(
   Common::XMLConfigurationFiles::GroupConfigurationStructure& unitConfiguration,
@@ -77,8 +80,7 @@ void DisambiguatedGraphXmlLogger::init(
   AbstractLinguisticLogger::init(unitConfiguration,manager);
 
   m_language=manager->getInitializationParameters().media;
-  m_macroManager=&(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_language)).getPropertyCodeManager().getPropertyManager("MACRO"));
-  m_microManager=&(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_language)).getPropertyCodeManager().getPropertyManager("MICRO"));
+  m_formatter = new DisambiguatedGraphXmlFormatter( m_language );
 
 }
 
@@ -101,65 +103,14 @@ LimaStatusCode DisambiguatedGraphXmlLogger::process(
     LERROR << "Can't open log file ";
     return CANNOT_OPEN_FILE_ERROR;
   }
-
-  AnalysisGraph* posTokenList=static_cast<AnalysisGraph*>(analysis.getData("PosGraph"));
-  const LinguisticGraph* posGraph=posTokenList->getGraph();
   
-  const FsaStringsPool& sp=Common::MediaticData::MediaticData::single().stringsPool(m_language);
+  LimaStatusCode status = m_formatter->process(analysis, out);
 
-  out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
-  out << "<vertices>" << endl;
-
-  LinguisticGraphInEdgeIt inItr,inItrEnd;
-  LinguisticGraphVertexIt vxItr,vxItrEnd;
-  boost::tie(vxItr,vxItrEnd) = vertices(*posGraph);
-  for (;vxItr!=vxItrEnd;vxItr++)
-  {
-    MorphoSyntacticData* dw=get(vertex_data,*posGraph,*vxItr);
-    Token* ft=get(vertex_token,*posGraph,*vxItr);
-
-    if (ft == 0 || dw == 0)
-    {
-      continue;
-    }
-
-    uint64_t pos=0;
-    uint64_t len=0;
-    if (ft!=0)
-    {
-      pos=ft->position();
-      len=ft->length();
-    }
-
-    LinguisticCode macro = dw->firstValue(m_macroManager->getPropertyAccessor());
-    LinguisticCode micro = dw->firstValue(m_microManager->getPropertyAccessor());
-
-    std::string smacro = m_macroManager->getPropertySymbolicValue(macro);
-    std::string smicro = m_microManager->getPropertySymbolicValue(micro);
-
-    out << "<vertex id=\"" << *vxItr << "\" position=\"" << pos << "\" length=\"" << len << "\" >" << endl;
-    std::set<StringsPoolIndex> lemmas = dw->allLemma();
-    std::set<StringsPoolIndex>::const_iterator lemmaIt, lemmaIt_end;
-    lemmaIt = lemmas.begin(); lemmaIt_end = lemmas.end();
-    for (; lemmaIt != lemmaIt_end; lemmaIt++)
-    {
-      out << "  <lemma>" << limastring2utf8stdstring(sp[*lemmaIt]) << "</lemma>" << endl;
-    }
-    out << "  <macro>" << smacro << "</macro>" << endl;
-    out << "  <micro>" << smicro << "</micro>" << endl;
-    boost::tie(inItr,inItrEnd) = in_edges(*vxItr,*posGraph);
-    for (;inItr!=inItrEnd;inItr++)
-    {
-      out << "  <pred id=\"" << source(*inItr,*posGraph) << "\"/>" << endl;
-    }
-    out << "</vertex>" << endl;
-  }
-  out << "</vertices>" << endl;
   out.close();
 
   TimeUtils::logElapsedTime("DisambiguatedGraphXmlLogger");
 
-  return SUCCESS_ID;
+  return status;
 }
 
 

@@ -29,7 +29,9 @@ SET(lima-lp-postagger_LIB_SRCS
    dummyPosTagger.cpp
    greedyPosTagger.cpp
    ViterbiPosTagger.cpp
+   DisambiguatedGraphXmlDumper.cpp
    DisambiguatedGraphXmlLogger.cpp
+   DisambiguatedGraphXmlFormatter.cpp
 )
 
 SET(lima-lp-postagger_LIB_LINK

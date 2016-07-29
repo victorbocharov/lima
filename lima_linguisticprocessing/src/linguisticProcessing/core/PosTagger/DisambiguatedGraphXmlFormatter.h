@@ -20,11 +20,11 @@
  *   Copyright (C) 2004-2012 by CEA LIST                               *
  *                                                                         *
  ***************************************************************************/
-#ifndef LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLLOGGER_H
-#define LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLLOGGER_H
+#ifndef LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLFORMATTER_H
+#define LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLFORMATTER_H
 
-#include "PosTaggerExport.h"
-#include "linguisticProcessing/core/LinguisticProcessors/AbstractLinguisticLogger.h"
+#include "linguisticProcessing/common/PropertyCode/PropertyManager.h"
+#include "common/ProcessUnitFramework/AnalysisContent.h"
 
 namespace Lima
 {
@@ -34,28 +34,22 @@ namespace LinguisticProcessing
 
 namespace PosTagger
 {
-class DisambiguatedGraphXmlFormatter;
+
 /**
-@author Benoit Mathieu
+@author Olivier Mesnard
 */
-class LIMA_POSTAGGER_EXPORT DisambiguatedGraphXmlLogger : public AbstractLinguisticLogger
+class DisambiguatedGraphXmlFormatter
 {
 public:
-  DisambiguatedGraphXmlLogger();
+  DisambiguatedGraphXmlFormatter( const MediaId& language );
 
-  virtual ~DisambiguatedGraphXmlLogger();
-
-  void init(
-    Common::XMLConfigurationFiles::GroupConfigurationStructure& unitConfiguration,
-    Manager* manager)
-  ;
-
-  LimaStatusCode process(
-    AnalysisContent& analysis) const;
+  LimaStatusCode process(AnalysisContent& analysis, std::ostream& out) const;
 
 private:
   MediaId m_language;
-  DisambiguatedGraphXmlFormatter* m_formatter;
+  const Common::PropertyCode::PropertyManager* m_macroManager;
+  const Common::PropertyCode::PropertyManager* m_microManager;
+
 };
 
 }
@@ -64,4 +58,4 @@ private:
 
 }
 
-#endif // LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLLOGGER_H
+#endif // LIMA_LINGUISTICPROCESSING_POSTAGGERDISAMBIGUATEDGRAPHXMLFORMATTER_H
