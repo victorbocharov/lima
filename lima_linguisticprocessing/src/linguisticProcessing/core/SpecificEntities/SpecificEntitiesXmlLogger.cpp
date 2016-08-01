@@ -309,12 +309,12 @@ outputEntity( AnnotationData* annotationData,
       featureItr!=features_end; featureItr++)
       {
         if( featureItr->getPosition() != UNDEFPOSITION ) {
-          out << "<" << featureItr->getName();
+          out << "<component name=\"" << featureItr->getName() << "\"";
           out << " pos=\"" << featureItr->getPosition() << "\"";
           out << " len=\"" << featureItr->getLength() << "\"";
           out << ">";
           out << Common::Misc::limastring2utf8stdstring(Common::Misc::transcodeToXmlEntities(Common::Misc::utf8stdstring2limastring(featureItr->getValueString())))
-              << "</" << featureItr->getName() << ">";
+              << "</component>";
         }
       }
       

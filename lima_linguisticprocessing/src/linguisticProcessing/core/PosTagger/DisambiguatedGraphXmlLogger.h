@@ -56,6 +56,7 @@ public:
 private:
   MediaId m_language;
   DisambiguatedGraphXmlFormatter* m_formatter;
+  bool m_outputForm;
 };
 
 }

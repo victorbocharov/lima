@@ -56,8 +56,16 @@ void DisambiguatedGraphXmlDumper::init(Common::XMLConfigurationFiles::GroupConfi
   AbstractTextualAnalysisDumper::init(unitConfiguration,manager);
 
   m_language=manager->getInitializationParameters().media;
+  try
+  {
+    m_outputForm=(unitConfiguration.getParamsValueAtKey("outputForm")=="true");
+  }
+  catch (NoSuchParam& )
+  {
+    m_outputForm=false;
+  }
   
-  m_formatter = new DisambiguatedGraphXmlFormatter( m_language );
+  m_formatter = new DisambiguatedGraphXmlFormatter( m_language, m_outputForm );
   
 }
 

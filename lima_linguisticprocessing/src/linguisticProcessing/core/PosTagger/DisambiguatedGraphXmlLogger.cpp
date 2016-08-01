@@ -45,6 +45,7 @@
 using namespace std;
 using namespace Lima::LinguisticProcessing::LinguisticAnalysisStructure;
 using namespace Lima::Common::Misc;
+using namespace Lima::Common::XMLConfigurationFiles;
 
 namespace Lima
 {
@@ -80,7 +81,15 @@ void DisambiguatedGraphXmlLogger::init(
   AbstractLinguisticLogger::init(unitConfiguration,manager);
 
   m_language=manager->getInitializationParameters().media;
-  m_formatter = new DisambiguatedGraphXmlFormatter( m_language );
+  try
+  {
+    m_outputForm=(unitConfiguration.getParamsValueAtKey("outputForm")=="true");
+  }
+  catch (NoSuchParam& )
+  {
+    m_outputForm=false;
+  }
+  m_formatter = new DisambiguatedGraphXmlFormatter( m_language, m_outputForm );
 
 }
 
@@ -103,7 +112,7 @@ LimaStatusCode DisambiguatedGraphXmlLogger::process(
     LERROR << "Can't open log file ";
     return CANNOT_OPEN_FILE_ERROR;
   }
-  
+  out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
   LimaStatusCode status = m_formatter->process(analysis, out);
 
   out.close();

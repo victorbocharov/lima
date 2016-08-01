@@ -55,6 +55,7 @@ public:
     
 private:
   DisambiguatedGraphXmlFormatter* m_formatter;
+  bool m_outputForm;
 };
 
 

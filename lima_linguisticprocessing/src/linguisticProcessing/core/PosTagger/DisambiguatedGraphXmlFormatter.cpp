@@ -39,8 +39,8 @@ namespace LinguisticProcessing
 namespace PosTagger
 {
 
-DisambiguatedGraphXmlFormatter::DisambiguatedGraphXmlFormatter( const MediaId& language )
-: m_language(language)
+DisambiguatedGraphXmlFormatter::DisambiguatedGraphXmlFormatter( const MediaId& language, bool outputForm  )
+: m_language(language), m_outputForm(outputForm)
 {
   m_macroManager=&(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_language)).getPropertyCodeManager().getPropertyManager("MACRO"));
   m_microManager=&(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_language)).getPropertyCodeManager().getPropertyManager("MICRO"));
@@ -54,7 +54,6 @@ LimaStatusCode DisambiguatedGraphXmlFormatter::process(AnalysisContent& analysis
   
   const FsaStringsPool& sp=Common::MediaticData::MediaticData::single().stringsPool(m_language);
 
-  out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
   out << "<vertices>" << endl;
 
   LinguisticGraphInEdgeIt inItr,inItrEnd;
@@ -72,10 +71,12 @@ LimaStatusCode DisambiguatedGraphXmlFormatter::process(AnalysisContent& analysis
 
     uint64_t pos=0;
     uint64_t len=0;
+    std::string form;
     if (ft!=0)
     {
       pos=ft->position();
       len=ft->length();
+      form = Common::Misc::limastring2utf8stdstring(ft->stringForm());
     }
 
     LinguisticCode macro = dw->firstValue(m_macroManager->getPropertyAccessor());
@@ -84,7 +85,12 @@ LimaStatusCode DisambiguatedGraphXmlFormatter::process(AnalysisContent& analysis
     std::string smacro = m_macroManager->getPropertySymbolicValue(macro);
     std::string smicro = m_microManager->getPropertySymbolicValue(micro);
 
-    out << "<vertex id=\"" << *vxItr << "\" position=\"" << pos << "\" length=\"" << len << "\" >" << endl;
+    out << "<vertex id=\"" << *vxItr << "\" position=\"" << pos << "\" length=\"" << len << "\"";
+    if( m_outputForm ) {
+      out << " form=\"" << form << "\"";
+    }
+    out << ">" << endl;
+    
     std::set<StringsPoolIndex> lemmas = dw->allLemma();
     std::set<StringsPoolIndex>::const_iterator lemmaIt, lemmaIt_end;
     lemmaIt = lemmas.begin(); lemmaIt_end = lemmas.end();

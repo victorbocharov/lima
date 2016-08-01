@@ -41,7 +41,7 @@ namespace PosTagger
 class DisambiguatedGraphXmlFormatter
 {
 public:
-  DisambiguatedGraphXmlFormatter( const MediaId& language );
+  DisambiguatedGraphXmlFormatter( const MediaId& language, bool outputForm );
 
   LimaStatusCode process(AnalysisContent& analysis, std::ostream& out) const;
 
@@ -49,6 +49,7 @@ private:
   MediaId m_language;
   const Common::PropertyCode::PropertyManager* m_macroManager;
   const Common::PropertyCode::PropertyManager* m_microManager;
+  bool m_outputForm;
 
 };
 
