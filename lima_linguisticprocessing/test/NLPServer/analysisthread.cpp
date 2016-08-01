@@ -101,6 +101,26 @@ void AnalysisThread::startAnalysis()
   CORECLIENTLOGINIT;
   LDEBUG << "AnalysisThread::startAnalysis" << m_d->m_request->methodString() << m_d->m_request->url().path();
 
+  if( m_d->m_request->url().path() ==  "/annotXML")
+  {
+      processAnnotXML();
+  }
+  else if( m_d->m_request->url().path() ==  "/annotXML")
+  {
+      processAnnotConll();
+  }
+  else
+  {
+      m_d->m_response->writeHead(404);
+      m_d->m_response->setHeader("NotFound",m_d->m_request->url().path());
+      m_d->m_response->end(QByteArray("Only annotConll and annotXML are currently available."));
+  }
+}
+
+void AnalysisThread::processAnnotConll()
+{
+  CORECLIENTLOGINIT;
+
   // Arguments to be read from the request
   QString language, pipeline, text;
   QPair<QString, QString> item;
@@ -108,9 +128,9 @@ void AnalysisThread::startAnalysis()
   std::set<std::string> inactiveUnits;
 
   // First case = GET
-  if (m_d->m_request->methodString() == "HTTP_GET" && m_d->m_request->url().path() == "/annot")
+  if (m_d->m_request->methodString() == "HTTP_GET")
   {
-    LDEBUG << "AnalysisThread::startAnalysis: process annot request (mode HTTP_GET)";
+    LDEBUG << "AnalysisThread::processAnnotConll: process annot request (mode HTTP_GET)";
     // read arguments from the request
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -120,24 +140,24 @@ void AnalysisThread::startAnalysis()
       {
         language = item.second;
         metaData["Lang"]=language.toUtf8().data();
-        LDEBUG << "AnalysisThread::startAnalysis: " << "language=" << language;
+        LDEBUG << "AnalysisThread::processAnnotConll: " << "language=" << language;
       }
       if (item.first == "pipeline")
       {
         pipeline = item.second;
-        LDEBUG << "AnalysisThread::startAnalysis: " << "pipeline=" << pipeline;
+        LDEBUG << "AnalysisThread::processAnnotConll: " << "pipeline=" << pipeline;
       }
       if (item.first == "text")
       {
         text = item.second;
-        LDEBUG << "AnalysisThread::startAnalysis: " << "text='" << text << "'";
+        LDEBUG << "AnalysisThread::processAnnotConll: " << "text='" << text << "'";
       }
     }
   }
   // second case: HTTP_POST
-  else if (m_d->m_request->methodString() == "HTTP_POST" && m_d->m_request->url().path() == "/annot")
+  else if (m_d->m_request->methodString() == "HTTP_POST")
   {
-    LDEBUG << "AnalysisThread::startAnalysis: process extractEN request (mode HTTP_POST)";
+    LDEBUG << "AnalysisThread::processAnnotConll: process extractEN request (mode HTTP_POST)";
     std::string text_utf8;
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -145,12 +165,138 @@ void AnalysisThread::startAnalysis()
       {
         language = item.second;
         metaData["Lang"]=language.toUtf8().data();
-        LDEBUG << "AnalysisThread::startAnalysis: " << "language=" << language;
+        LDEBUG << "AnalysisThread::processAnnotConll: " << "language=" << language;
       }
       if (item.first == "pipeline")
       {
         pipeline = item.second;
-        LDEBUG << "AnalysisThread::startAnalysis: " << "pipeline=" << pipeline;
+        LDEBUG << "AnalysisThread::processAnnotConll: " << "pipeline=" << pipeline;
+      }
+    }
+    const QByteArray& body = m_d->m_request->body();
+    text_utf8 = std::string(body.data());
+    text = Misc::utf8stdstring2limastring(text_utf8);
+  }
+  else
+  {
+    m_d->m_response->writeHead(404);
+    m_d->m_response->setHeader("Allow","GET,POST");
+    m_d->m_response->end(QByteArray("Only GET and POST search queries are currently allowed."));
+    return;
+  }
+
+  // Handle bad parameters cases
+  if( language.isEmpty() )
+  {
+    m_d->m_response->writeHead(400);
+    m_d->m_response->end(QByteArray("Empty language"));
+    return;
+  }
+
+  if( m_d->m_langs.find(metaData["Lang"]) == m_d->m_langs.end() )
+  {
+    m_d->m_response->writeHead(400);
+    QString errorMessage = QString(tr("Language %1 is no initialized")).arg(language);
+    m_d->m_response->end(errorMessage.toUtf8());
+    return;
+  }
+  if( text.isEmpty() )
+  {
+    m_d->m_response->writeHead(400);
+    QString errorMessage = QString(tr("Text is empty"));
+    m_d->m_response->end(errorMessage.toUtf8());
+    return;
+  }
+
+  // Create a handler and map it for Conll Dumper
+  std::map<std::string, AbstractAnalysisHandler*> handlers;
+  LinguisticProcessing::SimpleStreamHandler* conllHandler = new LinguisticProcessing::SimpleStreamHandler();
+  handlers.insert(std::make_pair("conll", conllHandler));
+  std::ostringstream* conllOss = new std::ostringstream();
+  conllHandler->setOut(conllOss);
+
+  // analyze Text...
+  LDEBUG << "Analyzing" << language << text;
+  std::ostringstream ots;
+  std::string pipe = pipeline.toUtf8().data();
+  QTemporaryFile tempFile;
+  metaData["FileName"]=tempFile.fileName().toUtf8().constData();
+  m_d->m_analyzer->analyze(text,metaData, pipe, handlers, inactiveUnits);
+
+  // TODO get result
+  std::string resultString;
+  m_d->m_response->setHeader("Content-Type", "text/xml; charset=utf-8");
+  m_d->m_response->writeHead(200);
+  resultString.append(conllOss->str());
+
+// QString body = QString::fromUtf8(resultString.c_st r());
+// m_d->m_response->end(body.toUtf8());
+  m_d->m_response->end(QByteArray(resultString.c_str()));
+  m_d->m_request->deleteLater();
+  LDEBUG << "AnalysisThread::processAnnotConll: free log and stream... ";
+  if( conllHandler != 0 )
+    delete conllHandler;
+  if( conllOss != 0 )
+    delete conllOss;
+  // ???
+  // deleteLater();
+  //quit();
+}
+
+void AnalysisThread::processAnnotXML()
+{
+  CORECLIENTLOGINIT;
+
+  // Arguments to be read from the request
+  QString language, pipeline, text;
+  QPair<QString, QString> item;
+  std::map<std::string,std::string> metaData;
+  std::set<std::string> inactiveUnits;
+
+  // First case = GET
+  if (m_d->m_request->methodString() == "HTTP_GET")
+  {
+    LDEBUG << "AnalysisThread::processAnnotXML: process annot request (mode HTTP_GET)";
+    // read arguments from the request
+    Q_FOREACH( item, m_d->m_request->url().queryItems())
+    {
+      QTemporaryFile tempFile;
+      metaData["FileName"]=tempFile.fileName().toUtf8().constData();
+      if (item.first == "lang")
+      {
+        language = item.second;
+        metaData["Lang"]=language.toUtf8().data();
+        LDEBUG << "AnalysisThread::processAnnotXML: " << "language=" << language;
+      }
+      if (item.first == "pipeline")
+      {
+        pipeline = item.second;
+        LDEBUG << "AnalysisThread::processAnnotXML: " << "pipeline=" << pipeline;
+      }
+      if (item.first == "text")
+      {
+        text = item.second;
+        LDEBUG << "AnalysisThread::processAnnotXML: " << "text='" << text << "'";
+      }
+    }
+  }
+  // second case: HTTP_POST
+  else if (m_d->m_request->methodString() == "HTTP_POST")
+  {
+    LDEBUG << "AnalysisThread::processAnnotXML: process extractEN request (mode HTTP_POST)";
+    std::string text_utf8;
+    Q_FOREACH( item, m_d->m_request->url().queryItems())
+    {
+      if (item.first == "lang")
+      {
+        language = item.second;
+        metaData["Lang"]=language.toUtf8().data();
+        LDEBUG << "AnalysisThread::processAnnotXML: " << "language=" << language;
+      }
+      if (item.first == "pipeline")
+      {
+        pipeline = item.second;
+        LDEBUG << "AnalysisThread::processAnnotXML: " << "pipeline=" << pipeline;
       }
     }
     const QByteArray& body = m_d->m_request->body();
@@ -225,7 +371,7 @@ void AnalysisThread::startAnalysis()
   resultString.append("<justForFun/>");
   resultString.append("</disambiguatedGraphXmlLogger>");
   resultString.append("</NLPAnnot>");
-  LDEBUG << "AnalysisThread::startAnalysis: seLogger output is " << QString::fromUtf8(resultString.c_str());
+  LDEBUG << "AnalysisThread::processAnnotXML: seLogger output is " << QString::fromUtf8(resultString.c_str());
 
   m_d->m_response->setHeader("Content-Type", "text/xml; charset=utf-8");
   m_d->m_response->writeHead(200);
@@ -234,7 +380,7 @@ void AnalysisThread::startAnalysis()
 // m_d->m_response->end(body.toUtf8());
   m_d->m_response->end(QByteArray(resultString.c_str()));
   m_d->m_request->deleteLater();
-  LDEBUG << "AnalysisThread::startAnalysis: free log and stream... ";
+  LDEBUG << "AnalysisThread::processAnnotXML: free log and stream... ";
   if( neLogWriter != 0 )
     delete neLogWriter;
   if( neOss != 0 )
@@ -250,5 +396,4 @@ void AnalysisThread::startAnalysis()
   // ???
   // deleteLater();
   //quit();
-  
 }

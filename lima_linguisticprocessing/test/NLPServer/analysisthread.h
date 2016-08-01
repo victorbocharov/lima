@@ -58,6 +58,8 @@ public Q_SLOTS:
     void slotStarted();
 
 private:
+  void processAnnotConll();
+  void processAnnotXML();
   AnalysisThreadPrivate* m_d;
 };
 
