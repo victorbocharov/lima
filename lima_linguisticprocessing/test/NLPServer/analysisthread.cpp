@@ -105,7 +105,7 @@ void AnalysisThread::startAnalysis()
   {
       processAnnotXML();
   }
-  else if( m_d->m_request->url().path() ==  "/annotXML")
+  else if( m_d->m_request->url().path() ==  "/annotConll")
   {
       processAnnotConll();
   }
@@ -130,7 +130,7 @@ void AnalysisThread::processAnnotConll()
   // First case = GET
   if (m_d->m_request->methodString() == "HTTP_GET")
   {
-    LDEBUG << "AnalysisThread::processAnnotConll: process annot request (mode HTTP_GET)";
+    LDEBUG << "AnalysisThread::processAnnotConll: process annotConll request (mode HTTP_GET)";
     // read arguments from the request
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -157,7 +157,7 @@ void AnalysisThread::processAnnotConll()
   // second case: HTTP_POST
   else if (m_d->m_request->methodString() == "HTTP_POST")
   {
-    LDEBUG << "AnalysisThread::processAnnotConll: process extractEN request (mode HTTP_POST)";
+    LDEBUG << "AnalysisThread::processAnnotConll: process annotConll request (mode HTTP_POST)";
     std::string text_utf8;
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -216,7 +216,7 @@ void AnalysisThread::processAnnotConll()
   conllHandler->setOut(conllOss);
 
   // analyze Text...
-  LDEBUG << "Analyzing" << language << text;
+  LDEBUG << "AnalysisThread::processAnnotConll: Analyzing" << language << text;
   std::ostringstream ots;
   std::string pipe = pipeline.toUtf8().data();
   QTemporaryFile tempFile;
@@ -256,7 +256,7 @@ void AnalysisThread::processAnnotXML()
   // First case = GET
   if (m_d->m_request->methodString() == "HTTP_GET")
   {
-    LDEBUG << "AnalysisThread::processAnnotXML: process annot request (mode HTTP_GET)";
+    LDEBUG << "AnalysisThread::processAnnotXML: process annotXML request (mode HTTP_GET)";
     // read arguments from the request
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -283,7 +283,7 @@ void AnalysisThread::processAnnotXML()
   // second case: HTTP_POST
   else if (m_d->m_request->methodString() == "HTTP_POST")
   {
-    LDEBUG << "AnalysisThread::processAnnotXML: process extractEN request (mode HTTP_POST)";
+    LDEBUG << "AnalysisThread::processAnnotXML: process annotXML request (mode HTTP_POST)";
     std::string text_utf8;
     Q_FOREACH( item, m_d->m_request->url().queryItems())
     {
@@ -351,7 +351,7 @@ void AnalysisThread::processAnnotXML()
    
   // analyze Text...
   
-  LDEBUG << "Analyzing" << language << text;
+  LDEBUG << "AnalysisThread::processAnnotXML: Analyzing" << language << text;
   std::ostringstream ots;
   std::string pipe = pipeline.toUtf8().data();
   QTemporaryFile tempFile;
@@ -360,16 +360,9 @@ void AnalysisThread::processAnnotXML()
 
   std::string resultString("<?xml version='1.0' encoding='UTF-8'?>");
   resultString.append("<NLPAnnot>");
-  resultString.append("<specificEntitiesXmlLoggerForLimaserver>");
   resultString.append(neOss->str());
-  resultString.append("</specificEntitiesXmlLoggerForLimaserver>");
-  resultString.append("<sentenceBoundariesXmlLogger>");
   resultString.append(sentenceOss->str());
-  resultString.append("</sentenceBoundariesXmlLogger>");
-  resultString.append("<disambiguatedGraphXmlLogger>");
   resultString.append(tokenOss->str());
-  resultString.append("<justForFun/>");
-  resultString.append("</disambiguatedGraphXmlLogger>");
   resultString.append("</NLPAnnot>");
   LDEBUG << "AnalysisThread::processAnnotXML: seLogger output is " << QString::fromUtf8(resultString.c_str());
 
