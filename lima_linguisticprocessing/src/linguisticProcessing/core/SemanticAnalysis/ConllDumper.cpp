@@ -200,6 +200,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
   LDEBUG << "ConllDumper::process";
 #endif
 
+  /* TODO: toBeRemoved, unused?
   LinguisticMetaData* metadata = static_cast<LinguisticMetaData*>(analysis.getData("LinguisticMetaData"));
   if (metadata == 0) 
   {
@@ -207,7 +208,9 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
     LERROR << "ConllDumper::process no LinguisticMetaData ! abort";
     return MISSING_DATA;
   }
+  */
 
+  /*  To access annotation like specific entities or access mapping posGraph->analysisGraph */
   AnnotationData* annotationData = static_cast<AnnotationData*>(analysis.getData("AnnotationData"));
   if (annotationData == 0) 
   {
@@ -215,6 +218,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
     LERROR << "ConllDumper::process no AnnotationData ! abort";
     return MISSING_DATA;
   }
+  /* check if AnalysisGraph exists */
   AnalysisGraph* tokenList=static_cast<AnalysisGraph*>(analysis.getData(m_d->m_graph));//est de type PosGraph et non pas AnalysisGraph
   if (tokenList==0) 
   {
@@ -222,6 +226,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
     LERROR << "ConllDumper::process graph " << m_d->m_graph << " has not been produced: check pipeline";
     return MISSING_DATA;
   }
+  /* check if Sentence boundary exists */
   LinguisticGraph* graph=tokenList->getGraph();
   SegmentationData* sd=static_cast<SegmentationData*>(analysis.getData("SentenceBoundaries"));
   if (sd==0) 
@@ -231,6 +236,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
     return MISSING_DATA;
   }
 
+  /* check if Syntactic data exists */
   SyntacticData* syntacticData=static_cast<SyntacticData*>(analysis.getData("SyntacticData"));
   if (syntacticData==0)
   {
@@ -240,10 +246,12 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
   }
   const DependencyGraph* depGraph = syntacticData-> dependencyGraph();
 
+  /* Initialize stream for output */
   QScopedPointer<DumperStream> dstream(initialize(analysis));
 
   std::map< LinguisticGraphVertex, std::pair<LinguisticGraphVertex, std::string> > vertexDependencyInformations;
 
+  // Iterate on sentences and then iterate on tokens in 1 sentence */
   uint64_t nbSentences((sd->getSegments()).size());
   if (nbSentences == 0)
   {
@@ -252,6 +260,8 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
     return SUCCESS_ID;
   }
   
+  // SentenceBoundariesFinder has been built from posGraph, 
+  // vertex indexes are relative to posGraph
   std::vector<Segment>::iterator sbItr=(sd->getSegments().begin());
 #ifdef DEBUG_LP
   LDEBUG << "ConllDumper::process There are "<< nbSentences << " sentences";
@@ -266,6 +276,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
 //     LDEBUG << "("<< (*im).first<< "," << (*im).second << ")" << endl;
 //   }
 
+  // result of mapping (segmentationMappingReverse) stored for future use in semanticRoleLabelling
   LimaConllTokenIdMapping* limaConllTokenIdMapping = static_cast<LimaConllTokenIdMapping*>(analysis.getData("LimaConllTokenIdMapping"));
   if (limaConllTokenIdMapping == 0)
   {
@@ -392,7 +403,7 @@ LimaStatusCode ConllDumper::process(AnalysisContent& analysis) const
 #ifdef DEBUG_LP
       LDEBUG << "ConllDumper::process PosGraph token" << v;
 #endif
-      if( morphoData!=0 && !morphoData->empty() && ft != 0)
+      if( tokenId !=  0 && morphoData!=0 && !morphoData->empty() && ft != 0)
       {
         const QString macro=QString::fromUtf8(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_d->m_language)).getPropertyCodeManager().getPropertyManager("MACRO").getPropertySymbolicValue(morphoData->firstValue(*m_d->m_propertyAccessor)).c_str());
         const QString micro=QString::fromUtf8(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(m_d->m_language)).getPropertyCodeManager().getPropertyManager("MICRO").getPropertySymbolicValue(morphoData->firstValue(*m_d->m_propertyAccessor)).c_str());
