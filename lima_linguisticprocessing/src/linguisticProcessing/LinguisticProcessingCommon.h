@@ -109,6 +109,7 @@
 #define AULOGINIT  LOGINIT("LP::Automaton")
 #define PTLOGINIT  LOGINIT("LP::PosTagger")
 #define SELOGINIT  LOGINIT("LP::SpecificEntities")
+#define TFSELOGINIT  LOGINIT("LP::TensorflowSpecificEntities")
 #define SALOGINIT  LOGINIT("LP::SyntacticAnalysis")
 #define COMPOUNDSLOGINIT LOGINIT("LP::Compounds")
 #define DUMPERLOGINIT LOGINIT("LP::Dumper")

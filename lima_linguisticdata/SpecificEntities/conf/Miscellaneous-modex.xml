@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<modulesConfig>
+  <module name="entities">
+    <group name="Miscellaneous">
+      <list name="entityList">
+        <item value="MISCELLANEOUS"/>
+      </list>
+    </group>
+  </module>
+  <module name="Processors">
+    <group name="MiscellaneousModex" class="ProcessUnitPipeline" >
+      <list name="processUnitSequence">
+<!--         <item value="ProductRecognition"/> -->
+      </list>
+    </group>
+  </module>
+  <module name="resources-eng">
+    <group name="MiscellaneousIndexing" class="EntityTypeIndexing">
+      <map name="entityPartsIndexing">
+        <entry key="Miscellaneous.MISCELLANEOUS" value="yes"/>
+      </map>
+    </group>
+    <group name="MiscellaneousMicros" class="SpecificEntitiesMicros">
+      <list name="Miscellaneous.MISCELLANEOUS">
+        <item value="NNP"/>
+        <item value="NNS"/>
+        <item value="NNPS"/>
+        <item value="JJ"/>
+        <item value="WDT"/>
+      </list>
+    </group>
+  </module>
+  <module name="resources-fre">
+    <group name="MiscellaneousIndexing" class="EntityTypeIndexing">
+      <map name="entityPartsIndexing">
+        <entry key="Miscellaneous.MISCELLANEOUS" value="yes"/>
+      </map>
+    </group>
+    <group name="MiscellaneousMicros" class="SpecificEntitiesMicros">
+      <list name="Miscellaneous.MISCELLANEOUS">
+        <item value="NC"/>
+        <item value="NP"/>
+        <item value="ADJ"/>
+      </list>
+    </group>
+  </module>
+</modulesConfig>

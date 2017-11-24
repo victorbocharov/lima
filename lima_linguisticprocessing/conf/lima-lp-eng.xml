@@ -455,11 +455,12 @@
     </group>
     <group name="sentenceBoundariesFinder" class="SentenceBoundariesFinder">
       <param key="graph" value="PosGraph"/>
+      <param key="data" value="SentenceBoundaries"/>
       <list name="micros">
         <item value="SENT"/>
       </list>
     </group>
-    <group name="syntacticAnalyzerChains" class="SyntacticAnalyzerChains">
+   <group name="syntacticAnalyzerChains" class="SyntacticAnalyzerChains">
       <param key="chainMatrix" value="chainMatrix"/>
       <param key="disambiguated" value="true"/>
       <param key="maxChainsNbByVertex" value="30"/>
