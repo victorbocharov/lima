@@ -22,6 +22,7 @@
 
 #include "common/MediaProcessors/MediaProcessUnit.h"
 #include "TensorflowSpecificEntitiesExport.h"
+#include <memory>
 
 namespace Lima
 {
@@ -31,11 +32,14 @@ namespace TensorflowSpecificEntities
 {
 #define TENSORFLOWSPECIFICENTITIES_CLASSID "TensorflowSpecificEntities"
 
+class TensorflowSpecificEntitiesPrivate;
+  
 class LIMA_TENSORFLOWSPECIFICENTITIES_EXPORT TensorflowSpecificEntities : public MediaProcessUnit
 {
 public:
-//   TensorflowSpecificEntities(){};
-  virtual ~TensorflowSpecificEntities(){};
+//   TensorflowSpecificEntities():m_d(std::make_unique<TensorflowSpecificEntitiesPrivate>()){}
+  TensorflowSpecificEntities();
+  virtual ~TensorflowSpecificEntities();
 
   void init(
     Common::XMLConfigurationFiles::GroupConfigurationStructure& unitConfiguration,
@@ -44,10 +48,8 @@ public:
   LimaStatusCode process(
     AnalysisContent& analysis) const override;  
 private:
-  std::string m_graph;
-  std::string m_fileChars;
-  std::string m_fileWords;
-  std::string m_fileTags;
+//   std::unique_ptr<TensorflowSpecificEntitiesPrivate> m_d;
+  TensorflowSpecificEntitiesPrivate* m_d;
 };
 
 } // TensorflowSpecificEntities

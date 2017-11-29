@@ -22,6 +22,7 @@
 #include "linguisticProcessing/LinguisticProcessingCommon.h"
 #include "common/XMLConfigurationFiles/xmlConfigurationFileExceptions.h"
 #include "common/MediaticData/mediaticData.h"
+#include "common/tools/FileUtils.h"
 #include "common/time/traceUtils.h"
 #include "common/time/timeUtilsController.h"
 #include "common/AbstractFactoryPattern/SimpleFactory.h"
@@ -31,6 +32,7 @@
 #include "linguisticProcessing/core/LinguisticAnalysisStructure/AnalysisGraph.h"
 #include "linguisticProcessing/core/LinguisticAnalysisStructure/Token.h"
 #include "linguisticProcessing/core/TextSegmentation/SegmentationData.h"
+
 #include <QDir>
 #include <QRegularExpression>
 #include <QStringList>
@@ -39,7 +41,6 @@
 #include <map>
 #include <externaltensorflowspecificentities/nerUtils.h>
 
-using namespace std;
 using namespace Lima::Common::AnnotationGraphs;
 using namespace Lima::Common::MediaticData;
 using namespace Lima::Common::XMLConfigurationFiles;
@@ -52,12 +53,100 @@ namespace LinguisticProcessing
 {
 namespace TensorflowSpecificEntities
 {   
+  SimpleFactory<MediaProcessUnit,TensorflowSpecificEntities> tensorflowSpecificEntitiesFactory(TENSORFLOWSPECIFICENTITIES_CLASSID);
+  
+  class TensorflowSpecificEntitiesPrivate
+  {
+    friend class TensorflowSpecificEntities;
+    TensorflowSpecificEntitiesPrivate(){}
+    TensorflowSpecificEntitiesPrivate(
+      const std::string& graph,
+      const QString& fileChars,
+      const QString& fileWords,
+      const QString& fileTags);
+    
+    std::string m_graph;
+    QString m_fileChars;
+    QString m_fileWords;
+    QString m_fileTags;
+  };
+  
+  TensorflowSpecificEntitiesPrivate::TensorflowSpecificEntitiesPrivate(
+      const std::string& graph,
+      const QString& fileChars,
+      const QString& fileWords,
+      const QString& fileTags) :
+    m_graph(graph),
+    m_fileChars(fileChars),
+    m_fileWords(fileWords),
+    m_fileTags(fileTags)
+    {}
+
+  TensorflowSpecificEntities::TensorflowSpecificEntities()
+  :m_d(new TensorflowSpecificEntitiesPrivate())
+  {
+  }
+  
+  TensorflowSpecificEntities::~TensorflowSpecificEntities()
+  {
+    delete m_d;
+  }
+  
   void TensorflowSpecificEntities::init(
     Common::XMLConfigurationFiles::GroupConfigurationStructure& unitConfiguration,
     Manager* manager)
   {
     TFSELOGINIT;
     MediaId language = manager->getInitializationParameters().media;
+    try
+    {
+      m_d->m_graph=
+      Common::Misc::findFileInPaths(
+        Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
+        unitConfiguration.getParamsValueAtKey("graphOutputFile").c_str()).toStdString();
+    }
+    catch (NoSuchParam& )
+    {
+      LERROR << "no param 'model' in TensorflowSpecificEntities group for language " << (int) language;
+      throw InvalidConfiguration();
+    }
+    
+    try
+    {
+      m_d->m_fileChars=Common::Misc::findFileInPaths(
+        Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
+        unitConfiguration.getParamsValueAtKey("charValuesFile").c_str());
+    }
+    catch (NoSuchParam& )
+    {
+      LERROR << "no param 'model' in TensorflowSpecificEntities group for language " << (int) language;
+      throw InvalidConfiguration();
+    }
+    
+    try
+    {
+       m_d->m_fileWords=
+       Common::Misc::findFileInPaths(
+        Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
+        unitConfiguration.getParamsValueAtKey("wordValuesFile").c_str());
+    }
+    catch (NoSuchParam& )
+    {
+      LERROR << "no param 'model' in TensorflowSpecificEntities group for language " << (int) language;
+      throw InvalidConfiguration();
+    }
+    
+    try
+    {
+       m_d->m_fileTags=Common::Misc::findFileInPaths(
+        Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
+        unitConfiguration.getParamsValueAtKey("tagValuesFile").c_str());
+    }
+    catch (NoSuchParam& )
+    {
+      LERROR << "no param 'model' in TensorflowSpecificEntities group for language " << (int) language;
+      throw InvalidConfiguration();
+    }
   }
   
   LimaStatusCode TensorflowSpecificEntities::process(
@@ -71,18 +160,18 @@ namespace TensorflowSpecificEntities
       // Initialize a tensorflow session
       Session* session = nullptr;
       std::shared_ptr<Status> status(new Status(NewSession(SessionOptions(), &session)));
-      if (!status->ok()) {
-        std::cerr << status->ToString() << "\n";
-        return 1;
-      }
-      
-      // Read in the protobuf graph we have exported
-      GraphDef graphDef;
-      *status = ReadBinaryProto(Env::Default(),"results/test2/output_graph.pb", &graphDef);
-      if (!status->ok()) {
-        LERROR<< status->ToString() << "\n";
-        return 1;
-      }
+//       if (!status->ok()) {
+//         std::cerr << status->ToString() << "\n";
+// //         return 1;
+//       }
+//       
+//       // Read in the protobuf graph we have exported
+//       GraphDef graphDef;
+//       *status = ReadBinaryProto(Env::Default(),m_d->m_graph, &graphDef);
+//       if (!status->ok()) {
+//         LERROR<< status->ToString() << "\n";
+// //         return 1;
+//       }
 // 
 //       // Add the graph to the session
 //       *status = session->Create(graphDef);
@@ -97,22 +186,22 @@ namespace TensorflowSpecificEntities
       std::map<unsigned int,QString> vocabTags;
 // 
       try{
-        vocabWords= loadFileWords("data/words2.txt");
+        vocabWords= loadFileWords(m_d->m_fileWords);
         if(vocabWords.empty()){
-          return 1;
+//           return 1;
         }    
-        vocabChars= loadFileChars("data/chars2.txt");
+        vocabChars= loadFileChars(m_d->m_fileChars);
         if(vocabChars.empty()){
-          return 1;
+//           return 1;
         }    
-        vocabTags = loadFileTags("data/tags2.txt");
+        vocabTags = loadFileTags(m_d->m_fileTags);
         if(vocabTags.empty()){
-          return 1;
+//           return 1;
         }    
       }
       catch(const BadFileException& e){
         std::cerr<<e.what()<<std::endl;
-        return 1;
+//         return 1;
       }
 //             
 //       AnalysisGraph* tokenList=static_cast<AnalysisGraph*>(analysis.getData("AnalysisGraph"));
@@ -239,6 +328,7 @@ namespace TensorflowSpecificEntities
 //         std::cerr << status->ToString() << "\n";
 //         return 1;
 //       }
+      return SUCCESS_ID;
     }
   
 } // TensorflowSpecificEntities

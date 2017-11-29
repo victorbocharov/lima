@@ -38,6 +38,7 @@ target_link_libraries(lima-linguisticprocessing
   lima-lp-eventanalyzer
   lima-lp-corefsolver
   lima-lp-specificentities
+  lima-lp-tensorflowspecificentities
   lima-lp-syntacticanalysis
   lima-lp-morphologicanalysis
   lima-lp-dictionary

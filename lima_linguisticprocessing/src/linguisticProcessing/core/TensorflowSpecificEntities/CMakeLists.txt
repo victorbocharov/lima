@@ -20,13 +20,13 @@ add_definitions(-DLIMA_TENSORFLOWSPECIFICENTITIES_EXPORTING)
 
 ########### next target ###############
 
-SET(lima-lp-tensorflowspecificentites_LIB_SRCS
+SET(lima-lp-tensorflowspecificentities_LIB_SRCS
    TensorflowSpecificEntities.cpp
 )
 
-DECLARE_LIMA_PLUGIN(lima-lp-tensorflowspecificentites)
+DECLARE_LIMA_PLUGIN(lima-lp-tensorflowspecificentities)
 
-target_link_libraries(lima-lp-tensorflowspecificentites
+target_link_libraries(lima-lp-tensorflowspecificentities
     lima-common-factory
     lima-common-misc
     lima-common-data
@@ -43,7 +43,7 @@ target_link_libraries(lima-lp-tensorflowspecificentites
     lima-lp-linguisticanalysisstructure
     lima-lp-applyrecognizer
     lima-lp-automaton
-    ${TensorFlow_LIBRARIES} 
+    ${TensorFlow_LIBRARIES} tensorflow_framework
     ${PROTOBUF_LIBRARIES}
     ${MODULENER_LIBRARIES}
     ${optionalLibs}
@@ -51,9 +51,22 @@ target_link_libraries(lima-lp-tensorflowspecificentites
     ${QT_LIBRARIES}
 )
 
-set_target_properties(lima-lp-tensorflowspecificentites PROPERTIES VERSION ${LIMA_LP_LIB_VERSION} SOVERSION ${LIMA_LP_LIB_SOVERSION})
+set_target_properties(lima-lp-tensorflowspecificentities PROPERTIES VERSION ${LIMA_LP_LIB_VERSION} SOVERSION ${LIMA_LP_LIB_SOVERSION})
 
-install(TARGETS lima-lp-tensorflowspecificentites DESTINATION ${LIB_INSTALL_DIR}
+install(TARGETS lima-lp-tensorflowspecificentities DESTINATION ${LIB_INSTALL_DIR}
   COMPONENT runtime)
 
 ########### install files ###############
+
+install(FILES 
+    TensorflowSpecificEntities.h
+    TensorflowSpecificEntitiesExport.h
+  DESTINATION include/linguisticProcessing/core/TensorflowSpecificEntities
+  COMPONENT devel
+)
+
+install(FILES
+  logTensorflowSpecificEntitiescpp.properties
+  DESTINATION share/config/lima
+  COMPONENT log
+)

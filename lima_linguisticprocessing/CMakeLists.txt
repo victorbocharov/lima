@@ -168,6 +168,7 @@ endif (NOT QHTTPSERVER_FOUND)
 find_package(TensorFlow REQUIRED)
 find_package(Eigen REQUIRED)
 find_package(Protobuf REQUIRED)
+message(STATUS "Found TensorFlow. ${TensorFlow_INCLUDE_DIRS} ${TensorFlow_LIBRARIES} ")
 
 include_directories(${TensorFlow_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS})
 find_package(ModuleNer PATHS ${CMAKE_INSTALL_PREFIX}/share/apps/lima/cmake/Modules /usr/share/apps/lima/cmake/Modules REQUIRED)

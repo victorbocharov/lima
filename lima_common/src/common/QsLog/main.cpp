@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 {
   QCoreApplication a(argc, argv);
   QsLogging::Categories::instance().configure( QString::fromUtf8(qgetenv("LIMA_CONF").isEmpty()?"/usr/share/config/lima":qgetenv("LIMA_CONF").constData())+ "/log4cpp.properties");
+  QsLogging::Categories::instance().configure( QString::fromUtf8(qgetenv("LIMA_CONF").isEmpty()?"/usr/share/config/lima":qgetenv("LIMA_CONF").constData())+ "/logTensorflowSpecificEntitiescpp.properties");
   int ret = 0;
   {
     // init the logging mechanism
