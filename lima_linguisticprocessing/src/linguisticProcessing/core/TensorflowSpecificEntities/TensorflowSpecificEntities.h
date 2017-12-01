@@ -22,6 +22,8 @@
 
 #include "common/MediaProcessors/MediaProcessUnit.h"
 #include "TensorflowSpecificEntitiesExport.h"
+#include "linguisticProcessing/core/LinguisticAnalysisStructure/AnalysisGraph.h"
+#include "linguisticProcessing/core/Automaton/SpecificEntityAnnotation.h"
 #include <memory>
 
 namespace Lima
@@ -47,8 +49,23 @@ public:
 
   LimaStatusCode process(
     AnalysisContent& analysis) const override;  
+  
+  LimaStatusCode runTFGraph(AnalysisContent& analysis) const;
+  bool updateAnalysisData(AnalysisContent& analysis) const;
+   
 private:
-//   std::unique_ptr<TensorflowSpecificEntitiesPrivate> m_d;
+  
+  bool createSpecificEntity(
+    Automaton::RecognizerMatch& entityFound,
+    AnalysisContent& analysis) const;
+
+  void addMicrosToMorphoSyntacticData(
+     LinguisticAnalysisStructure::MorphoSyntacticData* newMorphData,
+     const LinguisticAnalysisStructure::MorphoSyntacticData* oldMorphData,
+     const std::set<LinguisticCode>& micros,
+     LinguisticAnalysisStructure::LinguisticElement& elem) const;
+     
+//   std::unique_ptr<TensorflowSpecificEntitiesPrivate> m_d;  
   TensorflowSpecificEntitiesPrivate* m_d;
 };
 

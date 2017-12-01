@@ -43,6 +43,7 @@ target_link_libraries(lima-lp-tensorflowspecificentities
     lima-lp-linguisticanalysisstructure
     lima-lp-applyrecognizer
     lima-lp-automaton
+    lima-lp-specificentities
     ${TensorFlow_LIBRARIES} tensorflow_framework
     ${PROTOBUF_LIBRARIES}
     ${MODULENER_LIBRARIES}
