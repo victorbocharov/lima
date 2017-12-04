@@ -16,25 +16,28 @@
     You should have received a copy of the GNU Affero General Public License
     along with LIMA.  If not, see <http://www.gnu.org/licenses/>
 */
-
+// includes from project
 #include "TensorflowSpecificEntities.h"
 
-#include "linguisticProcessing/LinguisticProcessingCommon.h"
 #include "common/XMLConfigurationFiles/xmlConfigurationFileExceptions.h"
 #include "common/MediaticData/mediaticData.h"
 #include "common/tools/FileUtils.h"
 #include "common/time/traceUtils.h"
 #include "common/time/timeUtilsController.h"
+#include "common/Data/strwstrtools.h"
 #include "common/AbstractFactoryPattern/SimpleFactory.h"
-#include "linguisticProcessing/core/LinguisticAnalysisStructure/LinguisticGraph.h"
+
+#include "linguisticProcessing/LinguisticProcessingCommon.h"
 #include "linguisticProcessing/core/LinguisticResources/LinguisticResources.h"
 #include "linguisticProcessing/common/annotationGraph/AnnotationData.h"
 #include "linguisticProcessing/core/LinguisticAnalysisStructure/AnalysisGraph.h"
 #include "linguisticProcessing/core/SyntacticAnalysis/SyntacticData.h"
-#include "linguisticProcessing/core/LinguisticAnalysisStructure/Token.h"
+#include "linguisticProcessing/core/LinguisticAnalysisStructure/LinguisticGraph.h"
 #include "linguisticProcessing/core/TextSegmentation/SegmentationData.h"
 #include "linguisticProcessing/core/Automaton/SpecificEntityAnnotation.h"
 #include "linguisticProcessing/core/SpecificEntities/SpecificEntitiesMicros.h"
+
+// includes system
 #include <QString>
 #include <QDir>
 #include <QRegularExpression>
@@ -42,13 +45,18 @@
 #include <memory>
 #include <queue>
 #include <map>
+
+// include from external project
 #include <externaltensorflowspecificentities/nerUtils.h>
 
-using namespace Lima::Common::AnnotationGraphs;
+
+
+// declaration of using namespace
 using namespace Lima::Common::MediaticData;
 using namespace Lima::Common::XMLConfigurationFiles;
 using namespace Lima::LinguisticProcessing::LinguisticAnalysisStructure;
 using namespace Lima::LinguisticProcessing::SyntacticAnalysis;
+using namespace Lima::Common::AnnotationGraphs;
 using namespace Lima::LinguisticProcessing::SpecificEntities;
 using namespace tensorflow;
 
@@ -76,7 +84,7 @@ namespace TensorflowSpecificEntities
     QString m_fileWords;
     QString m_fileTags;
     std::map<LinguisticGraphVertex,QString> m_matchingVertextoEntity;
-    std::deque<LinguisticGraphVertex> m_visitedVertex;
+    std::vector<LinguisticGraphVertex> m_visitedVertex;
     MediaId m_language;
     const Common::PropertyCode::PropertyAccessor* m_microAccessor;
     FsaStringsPool* m_sp;
@@ -178,23 +186,20 @@ namespace TensorflowSpecificEntities
       TFSELOGINIT;
       LINFO << "start TensorflowSpecificEntities";
       
-     LimaStatusCode status=runTFGraph(analysis);
-     if(status!=SUCCESS_ID)
-     {
-       return status;
-     }
-     
-     if(updateAnalysisData(analysis))
-     {
-       
-       return SUCCESS_ID;
-     }
-     else
-     {
-       return UNKNOWN_ERROR;
-     }
-     
-     
+      LimaStatusCode status=runTFGraph(analysis);
+      if(status!=SUCCESS_ID)
+      {
+        return status;
+      }
+      
+      if(updateAnalysisData(analysis))
+      {
+        return SUCCESS_ID;
+      }
+      else
+      {
+        return UNKNOWN_ERROR;
+      }
     }
   
   LimaStatusCode TensorflowSpecificEntities::runTFGraph(AnalysisContent& analysis) const
@@ -276,13 +281,12 @@ namespace TensorflowSpecificEntities
     int batchSizeMax = 20;
     std::vector<Eigen::MatrixXi> result;
     LinguisticGraphVertex endPrecedentSentence=boundItr->getFirstVertex();
+    m_d->m_visitedVertex.reserve((sb->getSegments()).size());
     
     while(boundItr!=(sb->getSegments()).cend()){
       std::vector<std::vector<std::pair<std::vector<int>,int>>> textConverted(batchSizeMax);
       std::vector<std::vector<int>> wordIds(batchSizeMax);
       std::vector<std::vector<std::vector<int>>> charIds(batchSizeMax);
-      std::vector<QStringList> sentencesByBatch;
-      sentencesByBatch.reserve(batchSizeMax);
       int batchSize =0;
       
       while(batchSize<batchSizeMax && boundItr!=(sb->getSegments()).cend()){
@@ -299,9 +303,10 @@ namespace TensorflowSpecificEntities
             if(currentVertex!=tokenList->firstVertex() && currentVertex!=endPrecedentSentence)
             {
               Token* currentToken=tokenMap[currentVertex];
-              if(currentToken!=0)
+              if(currentToken!=nullptr && currentToken->stringForm()!=QString(""))
               {
-               m_d->m_visitedVertex.push_back(currentVertex);
+                m_d->m_visitedVertex.push_back(currentVertex);
+                std::cout<<currentToken->stringForm().toStdString()<<std::endl;
                 wordsRaw<<currentToken->stringForm();
               }
             }
@@ -322,35 +327,37 @@ namespace TensorflowSpecificEntities
             }
           }
         }
+        std::cout<<std::endl;
         
+        if(wordsRaw.size()>0){
+          //2. Transform words into ids and split all the characters and identify them
+          textConverted[batchSize].reserve(wordsRaw.size());
         
-        //2. Transform words into ids and split all the characters and identify them
-        textConverted[batchSize].reserve(wordsRaw.size());
-      
-        for(auto it=wordsRaw.cbegin();it!=wordsRaw.cend();++it){
-          try{
-            textConverted[batchSize].push_back(getProcessingWord(*it, vocabWords, vocabChars, true, true));
-            if(std::get<0>(textConverted[batchSize].back()).empty()){
-              return MISSING_DATA;
+          for(auto it=wordsRaw.cbegin();it!=wordsRaw.cend();++it){
+            try{
+              textConverted[batchSize].push_back(getProcessingWord(*it, vocabWords, vocabChars, true, true));
+              if(std::get<0>(textConverted[batchSize].back()).empty()){
+                return MISSING_DATA;
+              }
+            }
+            catch(const UnknownWordClassException& e){
+              TFSELOGINIT;
+              LERROR<<e.what();
+              return UNKNOWN_ERROR;
             }
           }
-          catch(const UnknownWordClassException& e){
-            TFSELOGINIT;
-            LERROR<<e.what();
-            return UNKNOWN_ERROR;
-          }
-        }
       
-        //3. Gather ids of words and ids of sequences of characters according to the order of words
+          //3. Gather ids of words and ids of sequences of characters according to the order of words
 
-        wordIds[batchSize].resize(wordsRaw.size());
-        charIds[batchSize].resize(wordsRaw.size());
-        for(auto i=0;i<textConverted[batchSize].size();++i){
-          charIds[batchSize][i].resize(textConverted[batchSize][i].first.size());
-          charIds[batchSize][i]=textConverted[batchSize][i].first;
-          wordIds[batchSize][i]=textConverted[batchSize][i].second;
+          wordIds[batchSize].resize(wordsRaw.size());
+          charIds[batchSize].resize(wordsRaw.size());
+          for(auto i=0;i<textConverted[batchSize].size();++i){
+            charIds[batchSize][i].resize(textConverted[batchSize][i].first.size());
+            charIds[batchSize][i]=textConverted[batchSize][i].first;
+            wordIds[batchSize][i]=textConverted[batchSize][i].second;
+          }
+          ++batchSize;
         }
-        ++batchSize;
         ++boundItr;
       }
     
@@ -360,18 +367,17 @@ namespace TensorflowSpecificEntities
       if(batchSize<batchSizeMax){
         wordIds.resize(batchSize);
         charIds.resize(batchSize);
-        sentencesByBatch.resize(batchSize);
       }   
       
       //5. Predict tags
       result.resize(result.size()+batchSize);
-      if(predictBatch(status, session, sentencesByBatch, batchSize, charIds, wordIds, result)==NERStatusCode::MISSING_DATA){
+      if(predictBatch(status, session, batchSize, charIds, wordIds, result)==NERStatusCode::MISSING_DATA){
         return MISSING_DATA;
       }
       //Continue to the next batch 
     }
     
-    std::deque<LinguisticGraphVertex>::const_iterator itVisited=m_d->m_visitedVertex.cbegin();
+    std::vector<LinguisticGraphVertex>::const_iterator itVisited=m_d->m_visitedVertex.cbegin();
           
     for(auto i=0;i<result.size();++i){
       for(auto j=0;j<result[i].size();++j){
@@ -393,37 +399,32 @@ namespace TensorflowSpecificEntities
 
   bool TensorflowSpecificEntities::updateAnalysisData(AnalysisContent& analysis) const
   {
+//     LinguisticGraphVertex previous;
     AnalysisGraph* analysisGraph=static_cast<AnalysisGraph*>(analysis.getData("AnalysisGraph"));
         
-    std::deque<LinguisticGraphVertex>::const_iterator itVisited=m_d->m_visitedVertex.cbegin();
+    std::vector<LinguisticGraphVertex>::const_iterator itVisited=m_d->m_visitedVertex.cbegin();
     while(itVisited!=m_d->m_visitedVertex.cend())
     {
       if(m_d->m_matchingVertextoEntity[*itVisited]!="O")
       {
-        //look if there is a group of words of the same entity
-//         std::queue<LinguisticGraphVertex> entityFound;
-//         entityFound.push(*itVisited);
-//         while(itVisited!=m_d->m_visitedVertex.cend() && m_d->m_matchingVertextoEntity[*itVisited]==m_d->m_matchingVertextoEntity[entityFound.front()])
-//         {
-//           entityFound.push(*itVisited);
-//           itVisited++;
-//         }
         Automaton::RecognizerMatch entityFound(analysisGraph,*itVisited,true);
-        EntityType seType=Common::MediaticData::MediaticData::single().getEntityType(m_d->m_matchingVertextoEntity[*itVisited].remove(QRegularExpression("^[BI]-")));
-        entityFound.setType(seType);
         itVisited++;
         while(itVisited!=m_d->m_visitedVertex.cend() && m_d->m_matchingVertextoEntity[*itVisited]==m_d->m_matchingVertextoEntity[entityFound.getBegin()])
         {
           entityFound.addBackVertex(*itVisited);
           itVisited++;
         }
+        EntityType seType=Common::MediaticData::MediaticData::single().getEntityType(m_d->m_matchingVertextoEntity[entityFound.getBegin()].remove(QRegularExpression("^[BI]-")));
+        entityFound.setType(seType);
         if(!createSpecificEntity(entityFound,analysis))
         {
           return false;
         }
+//         previous=entityFound.getEnd();
       }
       else
       {
+//         previous=*itVisited;
         itVisited++;
       }
     }
@@ -440,6 +441,19 @@ namespace TensorflowSpecificEntities
 
       AnnotationData* annotationData = static_cast< AnnotationData* >(analysis.getData("AnnotationData"));
       
+//       AnalysisData* rdata=analysis.getData("RecognizerData");
+//       if (rdata==0)  {
+//         TFSELOGINIT;
+//         LERROR << "CreateSpecificEntity: missing data RecognizerData: entity will not be created";
+//         return false;
+//       }
+//       ApplyRecognizer::RecognizerData* recoData=static_cast<ApplyRecognizer::RecognizerData*>(rdata);
+//       if (recoData==0) {
+//         TFSELOGINIT;
+//         LERROR << "CreateSpecificEntity: missing data RecognizerData: entity will not be created";
+//         return false;
+//       }
+      
       LinguisticGraph* lingGraph = const_cast<LinguisticGraph*>(analysisGraph->getGraph());
       VertexTokenPropertyMap tokenMap = get(vertex_token, *lingGraph);
       VertexDataPropertyMap dataMap = get(vertex_data, *lingGraph);
@@ -449,10 +463,16 @@ namespace TensorflowSpecificEntities
         return false;
       }
       //create a specif annotation
-      if (annotationData->dumpFunction("TensorflowSpecificEntities") == 0)
+//       if (annotationData->dumpFunction("TensorflowSpecificEntities") == 0)
+//       {
+//         annotationData->dumpFunction("TensorflowSpecificEntities", new DumpSpecificEntityAnnotation());
+//       }
+      
+      if (annotationData->dumpFunction("SpecificEntity") == 0)
       {
-        annotationData->dumpFunction("TensorflowSpecificEntities", new DumpSpecificEntityAnnotation());
+        annotationData->dumpFunction("SpecificEntity", new DumpSpecificEntityAnnotation());
       }
+      
       
       SpecificEntityAnnotation annot(entityFound,*m_d->m_sp);
       std::ostringstream oss;
@@ -460,14 +480,14 @@ namespace TensorflowSpecificEntities
       LinguisticGraphVertex head = annot.getHead();
       const MorphoSyntacticData* dataHead = dataMap[head];
       
-      // Preparer le Token et le MorphoSyntacticData pour le nouveau noeud. Construits
-      // a partir des infos de l'entitee nommee
+      // Prepare a new Token and a new MorphoSyntacticData for the new Vertex build 
+      // from specificentityannotation data
       StringsPoolIndex seFlex = annot.getString();
       StringsPoolIndex seLemma = annot.getNormalizedString();
       //No features with this method
       StringsPoolIndex seNorm = annot.getNormalizedForm();
 
-      // creer un MorphoSyntacticData
+      // creata a new MorphoSyntacticData
       MorphoSyntacticData* newMorphData = new MorphoSyntacticData();
 
       // all linguisticElements of this morphosyntacticData share common SE information
@@ -475,7 +495,7 @@ namespace TensorflowSpecificEntities
       elem.inflectedForm = seFlex; // StringsPoolIndex
       elem.lemma = seLemma; // StringsPoolIndex
       elem.normalizedForm = seNorm; // StringsPoolIndex
-      elem.type = TENSORFLOW_SPECIFIC_ENTITY; // MorphoSyntacticType
+      elem.type = SPECIFIC_ENTITY; // MorphoSyntacticType TENSORFLOW_SPECIFIC_ENTITY
      
       EntityType seType=entityFound.getType();
       const LimaString& resourceName =
@@ -512,6 +532,77 @@ namespace TensorflowSpecificEntities
         assert(false);
         return false;
       }
+      
+      //create the new LinguisticGraphVertex and two edges
+      LinguisticGraphVertex newVertex;
+      DependencyGraphVertex newDepVertex = 0;
+      if (syntacticData != 0)
+      {
+        boost::tie (newVertex, newDepVertex) = syntacticData->addVertex();
+      }
+      else
+      {
+        newVertex = add_vertex(*lingGraph);
+      }
+      AnnotationGraphVertex agv =  annotationData->createAnnotationVertex();
+      annotationData->addMatching(analysisGraph->getGraphId(),newVertex, "annot", agv);
+      annotationData->annotate(agv, Common::Misc::utf8stdstring2limastring(analysisGraph->getGraphId()), newVertex);
+      tokenMap[newVertex] = newToken;
+      dataMap[newVertex] = newMorphData;
+      GenericAnnotation ga(annot);
+
+      annotationData->annotate(agv, Common::Misc::utf8stdstring2limastring("SpecificEntity"), ga);
+      Automaton::RecognizerMatch::const_iterator entityFoundIt, entityFoundItEnd;
+      entityFoundIt = entityFound.begin(); 
+      entityFoundItEnd = entityFound.end();
+      for (; entityFoundIt != entityFoundItEnd; entityFoundIt++)
+      {
+        std::set< AnnotationGraphVertex > matches = annotationData->matches(analysisGraph->getGraphId(),(*entityFoundIt).m_elem.first,"annot");
+        if (matches.empty())
+        {
+          TFSELOGINIT;
+          LERROR << "CreateSpecificEntity::operator() No annotation 'annot' for" << (*entityFoundIt).m_elem.first;
+        }
+        else
+        {
+//           if( recoData->hasVertexAsEmbededEntity((*entityFoundIt).m_elem.first) )
+//           {
+//     #ifdef DEBUG_LP
+//             LDEBUG << "CreateSpecificEntity::operator(): vertex " << *(matches.begin()) << " is embeded";
+//     #endif
+//             AnnotationGraphVertex src = *(matches.begin());
+//             annotationData->annotate( agv, src, Common::Misc::utf8stdstring2limastring("holds"), 1);
+//           }
+        }
+      }
+      LinguisticGraphInEdgeIt inEdgeIt,inEdgeItEnd;
+      boost::tie(inEdgeIt,inEdgeItEnd)=boost::in_edges(head, *lingGraph);  
+      if(inEdgeIt!=inEdgeItEnd)
+      {
+        LinguisticGraphVertex previous=boost::source(*inEdgeIt,*lingGraph);      
+        boost::remove_edge(head,previous,*lingGraph);
+        boost::add_edge(previous, newVertex, *lingGraph);
+        clearUnreachableVertices(analysisGraph,previous);
+        clearUnreachableVertices(analysisGraph,head);
+      }
+      
+      LinguisticGraphOutEdgeIt outEdgeIt,outEdgeItEnd;
+      boost::tie(outEdgeIt,outEdgeItEnd)=boost::out_edges(entityFound.getEnd(), *lingGraph);      
+      if(outEdgeIt!=outEdgeItEnd)
+      {
+        LinguisticGraphVertex next=boost::target(*outEdgeIt,*lingGraph); 
+        boost::remove_edge(entityFound.getEnd(),next,*lingGraph);
+        boost::add_edge(newVertex, next, *lingGraph);
+        clearUnreachableVertices(analysisGraph,entityFound.getEnd());
+        clearUnreachableVertices(analysisGraph,next);
+      }
+      
+      entityFoundIt = entityFound.begin(); 
+      for (; entityFoundIt!=entityFoundItEnd; entityFoundIt++)
+      {
+        clearUnreachableVertices(analysisGraph,(*entityFoundIt).getVertex());
+      }
+      
       return true;
   }
   
@@ -537,6 +628,62 @@ namespace TensorflowSpecificEntities
               it_end=micros.end(); it!=it_end; it++) {
           elem.properties=*it;
           newMorphData->push_back(elem);
+        }
+      }
+    }
+    
+    void TensorflowSpecificEntities::clearUnreachableVertices(
+      AnalysisGraph* anagraph,
+      LinguisticGraphVertex from) const
+    {
+    #ifdef DEBUG_LP
+      TFSELOGINIT;
+      LDEBUG << "RecognizerData: clearing unreachable vertices from " << from;
+    #endif
+      LinguisticGraph& g=*(anagraph->getGraph());
+
+      std::queue<LinguisticGraphVertex> verticesToCheck;
+      verticesToCheck.push( from );
+      while (! verticesToCheck.empty() )
+      {
+    #ifdef DEBUG_LP
+        LDEBUG << "    vertices to check size = " << verticesToCheck.size();
+    #endif
+        LinguisticGraphVertex v = verticesToCheck.front();
+        verticesToCheck.pop();
+        bool toClear = false;
+    #ifdef DEBUG_LP
+        LDEBUG << "  out degree of " << v << " is " << out_degree(v, g);
+    #endif
+        if (out_degree(v, g) == 0 && v != anagraph->lastVertex())
+        {
+          toClear = true;
+          LinguisticGraphInEdgeIt it,it_end;
+          boost::tie(it,it_end)=in_edges(v,g);
+          for (; it!=it_end; it++)
+          {
+              verticesToCheck.push(source(*it,g));
+          }
+        }
+    #ifdef DEBUG_LP
+        LDEBUG << "  in degree of " << v << " is " << in_degree(v, g);
+    #endif
+        if (in_degree(v, g) == 0 && v != anagraph->firstVertex())
+        {
+          toClear = true;
+          LinguisticGraphOutEdgeIt it,it_end;
+          boost::tie(it,it_end)=out_edges(v,g);
+          for (; it!=it_end; it++)
+          {
+              verticesToCheck.push(target(*it,g));
+          }
+        }
+        if (toClear)
+        {
+    #ifdef DEBUG_LP
+          LDEBUG << "  clearing vertex " << v;
+    #endif
+          boost::clear_vertex(v,g);
         }
       }
     }

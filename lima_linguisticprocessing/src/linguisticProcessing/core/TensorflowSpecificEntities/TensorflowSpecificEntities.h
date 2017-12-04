@@ -23,8 +23,8 @@
 #include "common/MediaProcessors/MediaProcessUnit.h"
 #include "TensorflowSpecificEntitiesExport.h"
 #include "linguisticProcessing/core/LinguisticAnalysisStructure/AnalysisGraph.h"
-#include "linguisticProcessing/core/Automaton/SpecificEntityAnnotation.h"
-#include <memory>
+#include "linguisticProcessing/core/Automaton/recognizerMatch.h"
+// #include <memory>
 
 namespace Lima
 {
@@ -50,10 +50,14 @@ public:
   LimaStatusCode process(
     AnalysisContent& analysis) const override;  
   
-  LimaStatusCode runTFGraph(AnalysisContent& analysis) const;
-  bool updateAnalysisData(AnalysisContent& analysis) const;
-   
 private:
+  
+  //   std::unique_ptr<TensorflowSpecificEntitiesPrivate> m_d;  
+  TensorflowSpecificEntitiesPrivate* m_d;
+  
+  LimaStatusCode runTFGraph(AnalysisContent& analysis) const;
+  
+  bool updateAnalysisData(AnalysisContent& analysis) const;
   
   bool createSpecificEntity(
     Automaton::RecognizerMatch& entityFound,
@@ -64,13 +68,14 @@ private:
      const LinguisticAnalysisStructure::MorphoSyntacticData* oldMorphData,
      const std::set<LinguisticCode>& micros,
      LinguisticAnalysisStructure::LinguisticElement& elem) const;
-     
-//   std::unique_ptr<TensorflowSpecificEntitiesPrivate> m_d;  
-  TensorflowSpecificEntitiesPrivate* m_d;
+  
+  void clearUnreachableVertices(
+    LinguisticAnalysisStructure::AnalysisGraph* anagraph,
+    LinguisticGraphVertex from) const;
 };
 
-} // TensorflowSpecificEntities
-} // LinguisticProcessing
-} // Lima
+} // closing namespace TensorflowSpecificEntities
+} // closing namespace LinguisticProcessing
+} // closing namespace Lima
 
-#endif
+#endif // LIMA_LINGUISTICPROCESSING_TENSORFLOWSPECIFICENTITIES_TENSORFLOWSPECIFICENTITIES_H
