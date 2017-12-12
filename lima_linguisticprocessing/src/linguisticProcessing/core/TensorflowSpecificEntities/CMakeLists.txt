@@ -44,8 +44,8 @@ target_link_libraries(lima-lp-tensorflowspecificentities
     lima-lp-applyrecognizer
     lima-lp-automaton
     lima-lp-specificentities
-    ${TensorFlow_LIBRARIES} tensorflow_framework
-    ${PROTOBUF_LIBRARIES}
+    ${TensorFlow_LIBRARIES} 
+#     ${Protobuf_LIBRARIES}
     ${MODULENER_LIBRARIES}
     ${optionalLibs}
     ${Boost_LIBRARIES}
