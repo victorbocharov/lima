@@ -58,10 +58,14 @@ public:
     Manager* manager) override;
 
   /**  @brief @copybrief Lima::MediaProcessUnit::process()
+   * run the tensorflow model on the sentences built by the previous MediaProcessUnit @ref Lima::LinguisticProcessing::LinguisticAnalysisStructure::SentenceBoundariesFinder to identify entities
    * 
    * @details
-   * 1. calls @ref runTFGraph function, responsible for searching entities by running a deep learning model
-   * 2. calls @ref updateAnalysisData function to update the three graph  : Syntactic Graph, Analysis Graph and AnnotationGraph
+   * 1. initializes a tensorflow session and loads the model responsible for searching entities
+   * 2. gets sentence bounds and pre-process them by calling some functions from an external library
+   * the idea is to transform sentences into int according to external vocabularies which associate an identifier to words and characters
+   * 3. runs the model by using minibatching (groups of 20 sentences max)
+   * 4. calls @ref updateAnalysisData function to update the three graph  : Syntactic Graph, Analysis Graph and AnnotationGraph batch by batch
    * 
    * @param[in,out] analysis AnalysisContent object on which to process
    * 
@@ -80,24 +84,7 @@ private:
   
   TensorflowSpecificEntities(const TensorflowSpecificEntities&)=delete;
   TensorflowSpecificEntities& operator=(const TensorflowSpecificEntities&)=delete;
-  
-   /**  @brief run the tensorflow model on the sentences built by the previous MediaProcessUnit @ref Lima::LinguisticProcessing::LinguisticAnalysisStructure::SentenceBoundariesFinder to identify entities
-   * 
-   * @details
-   * 1. initializes a tensorflow session and loads the model
-   * 2. gets sentence bounds and pre-process them by calling some functions from an external library
-   * the idea is to transform sentences into int according to external vocabularies which associate an identifier to words and characters
-   * 3. runs the model by using minibatching (groups of 20 sentences max)
-   * 
-   * @param[in,out] analysis AnalysisContent object on which to process
-   * 
-   * @return  LimaStatusCode
-   * @retval SUCCESS_ID if success
-   * @retval UNKNOWN_ERROR if it is a tensorflow error
-   * @retval MISSING_DATA if some data are missing
-   */
-  LimaStatusCode runTFGraph(AnalysisContent& analysis) const;
-  
+   
    /**  @brief check where entities have been created and calls @ref createSpecificEntity function to update each graph when entities have been found
    * 
    * @details
