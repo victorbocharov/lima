@@ -51,39 +51,42 @@ namespace TensorflowSpecificEntities
   class TensorflowSpecificEntitiesPrivate
   {
     friend class TensorflowSpecificEntities;
-    TensorflowSpecificEntitiesPrivate():m_microAccessor(nullptr),m_sp(nullptr){}
-    TensorflowSpecificEntitiesPrivate(
-      const std::string& graph,
-      const QString& fileChars,
-      const QString& fileWords,
-      const QString& fileTags,
-      MediaId language);
+    ~TensorflowSpecificEntitiesPrivate();
+    TensorflowSpecificEntitiesPrivate():m_microAccessor(nullptr),m_sp(nullptr),m_session(nullptr){}
+    TensorflowSpecificEntitiesPrivate(MediaId language);
     std::string m_graph;
-    QString m_fileChars;
-    QString m_fileWords;
-    QString m_fileTags;
     std::map<LinguisticGraphVertex,QString> m_matchingVertextoEntity;
     std::vector<LinguisticGraphVertex> m_visitedVertex;
     MediaId m_language;
     const Common::PropertyCode::PropertyAccessor* m_microAccessor;
     FsaStringsPool* m_sp;
+    std::map<QString,int> m_vocabWords;
+    std::map<QChar,int> m_vocabChars;
+    std::map<unsigned int,QString> m_vocabTags;
+    Session* m_session;
+    std::shared_ptr<Status> m_status;
+    GraphDef m_graphDef;
   };
   
   TensorflowSpecificEntitiesPrivate::TensorflowSpecificEntitiesPrivate(
-      const std::string& graph,
-      const QString& fileChars,
-      const QString& fileWords,
-      const QString& fileTags,
       MediaId language) :
-    m_graph(graph),
-    m_fileChars(fileChars),
-    m_fileWords(fileWords),
-    m_fileTags(fileTags),
-    m_language(language)
+    m_language(language),
+    m_session(nullptr)
     {
       m_microAccessor=&(static_cast<const Common::MediaticData::LanguageData&>(Common::MediaticData::MediaticData::single().mediaData(language)).getPropertyCodeManager().getPropertyAccessor("MICRO"));
       m_sp=&(Common::MediaticData::MediaticData::changeable().stringsPool(language));
     }
+
+  TensorflowSpecificEntitiesPrivate::~TensorflowSpecificEntitiesPrivate(){
+      //8. Free any resources used by the session
+    m_status.reset(new Status());
+    *m_status=m_session->Close();
+    if (!m_status->ok()) {
+      TFSELOGINIT;
+      LERROR << m_status->ToString();
+      throw LimaException();
+    }
+  }
   
   TensorflowSpecificEntities::TensorflowSpecificEntities()
   :m_d(new TensorflowSpecificEntitiesPrivate())
@@ -106,6 +109,7 @@ namespace TensorflowSpecificEntities
     m_d->m_sp=&(Common::MediaticData::MediaticData::changeable().stringsPool(m_d->m_language));
     
     //Load parameters required for running the graph
+//     std::string graph;
     try
     {
       m_d->m_graph=
@@ -119,9 +123,10 @@ namespace TensorflowSpecificEntities
       throw InvalidConfiguration();
     }
     
+    QString fileChars,fileWords,fileTags;
     try
     {
-      m_d->m_fileChars=Common::Misc::findFileInPaths(
+      fileChars=Common::Misc::findFileInPaths(
         Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
         unitConfiguration.getParamsValueAtKey("charValuesFile").c_str());
     }
@@ -133,7 +138,7 @@ namespace TensorflowSpecificEntities
     
     try
     {
-       m_d->m_fileWords=
+       fileWords=
        Common::Misc::findFileInPaths(
         Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
         unitConfiguration.getParamsValueAtKey("wordValuesFile").c_str());
@@ -146,7 +151,7 @@ namespace TensorflowSpecificEntities
     
     try
     {
-       m_d->m_fileTags=Common::Misc::findFileInPaths(
+       fileTags=Common::Misc::findFileInPaths(
         Common::MediaticData::MediaticData::single().getResourcesPath().c_str(),
         unitConfiguration.getParamsValueAtKey("tagValuesFile").c_str());
     }
@@ -155,6 +160,51 @@ namespace TensorflowSpecificEntities
       LERROR << "no param 'tagValuesFile' in TensorflowSpecificEntities group for m_d->m_language " << (int) m_d->m_language;
       throw InvalidConfiguration();
     }
+    
+    try{
+        m_d->m_vocabWords= loadFileWords(fileWords);
+        if(m_d->m_vocabWords.empty()){
+          throw LimaException();
+        }    
+        m_d->m_vocabChars= loadFileChars(fileChars);
+        if(m_d->m_vocabChars.empty()){
+          throw LimaException();
+        }    
+        m_d->m_vocabTags = loadFileTags(fileTags);
+        if(m_d->m_vocabTags.empty()){
+          throw LimaException();
+        }    
+      }
+      catch(const BadFileException& e){
+        TFSELOGINIT;
+        LERROR<<e.what();
+        throw LimaException();
+      }
+  
+    // Initialize a tensorflow session
+    m_d->m_status.reset(new Status(NewSession(SessionOptions(), &m_d->m_session)));
+    if (!m_d->m_status->ok()) {
+      TFSELOGINIT;
+      LERROR <<m_d->m_status->ToString();
+      throw LimaException();
+    }
+    
+    // Read in the protobuf graph we have exported
+    *m_d->m_status = ReadBinaryProto(Env::Default(),m_d->m_graph, &m_d->m_graphDef);
+    if (!m_d->m_status->ok()) {
+      TFSELOGINIT;
+      LERROR<< m_d->m_status->ToString();
+      throw LimaException();
+    }
+    
+    // Add the graph to the session
+    *m_d->m_status = m_d->m_session->Create(m_d->m_graphDef);
+    if (!m_d->m_status->ok()) {
+      TFSELOGINIT;
+      LERROR << m_d->m_status->ToString();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+      throw LimaException();
+    }
+    
     
   }
   
@@ -165,58 +215,7 @@ namespace TensorflowSpecificEntities
       // Start named-entity recognition here !
       TFSELOGINIT;
       LINFO << "start TensorflowSpecificEntities";
- 
-      // Initialize a tensorflow session
-      Session* session = nullptr;
-      std::shared_ptr<Status> status(new Status(NewSession(SessionOptions(), &session)));
-      if (!status->ok()) {
-        TFSELOGINIT;
-        LERROR <<status->ToString();
-        return UNKNOWN_ERROR;
-      }
       
-      // Read in the protobuf graph we have exported
-      GraphDef graphDef;
-      *status = ReadBinaryProto(Env::Default(),m_d->m_graph, &graphDef);
-      if (!status->ok()) {
-        TFSELOGINIT;
-        LERROR << status->ToString(); 
-        return UNKNOWN_ERROR;
-      }
-      
-      // Add the graph to the session
-      *status = session->Create(graphDef);
-      if (!status->ok()) {
-        TFSELOGINIT;
-        LERROR << status->ToString();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-        return UNKNOWN_ERROR;
-      }
-      
-      // Load vocabulary 
-      std::map<QString,int> vocabWords;
-      std::map<QChar,int> vocabChars;
-      std::map<unsigned int,QString> vocabTags;
-
-      try{
-        vocabWords= loadFileWords(m_d->m_fileWords);
-        if(vocabWords.empty()){
-          return MISSING_DATA;
-        }    
-        vocabChars= loadFileChars(m_d->m_fileChars);
-        if(vocabChars.empty()){
-          return MISSING_DATA;
-        }    
-        vocabTags = loadFileTags(m_d->m_fileTags);
-        if(vocabTags.empty()){
-          return MISSING_DATA;
-        }    
-      }
-      catch(const BadFileException& e){
-        TFSELOGINIT;
-        LERROR<<e.what();
-        return CANNOT_OPEN_FILE_ERROR;
-      }
-
       // Get sentence bounds
       SegmentationData* sb=static_cast<SegmentationData*>(analysis.getData("SentenceBoundariesForSE"));
       if(sb==0){
@@ -230,7 +229,7 @@ namespace TensorflowSpecificEntities
         LERROR << "can't compute TensorflowSpecificEntities on graph AnalysisGraph !";
         return INVALID_CONFIGURATION;
       }
-      //Check if there are sentences.
+      //Check if there are setences.
       if(sb->getSegments().size()==0)
       {
         TFSELOGINIT;
@@ -327,7 +326,7 @@ namespace TensorflowSpecificEntities
           textConverted.reserve(wordsRaw.size());
           for(auto it=wordsRaw.cbegin();it!=wordsRaw.cend();++it){
             try{
-              textConverted.push_back(getProcessingWord(*it, vocabWords, vocabChars, true, true));
+              textConverted.push_back(getProcessingWord(*it, m_d->m_vocabWords, m_d->m_vocabChars, true, true));
               if(!std::get<1>(textConverted.back())){
                 return MISSING_DATA;
               }
@@ -380,7 +379,7 @@ namespace TensorflowSpecificEntities
         {       
           //5. Predict entity
           std::vector<Eigen::MatrixXi> result(batchSize);
-          if(predictBatch(status, session, batchSize, charIds, wordIds, result)==NERStatusCode::MISSING_DATA){
+          if(predictBatch(m_d->m_status, m_d->m_session, batchSize, charIds, wordIds, result)==NERStatusCode::MISSING_DATA){
             return MISSING_DATA;
           }
           
@@ -390,7 +389,7 @@ namespace TensorflowSpecificEntities
           //6. Store results in a map, mapping LinguisticGraphVertex to its entity, following sentence's order
           for(auto i=0;i<result.size();++i){
             for(auto j=0;j<result[i].size();++j){
-              m_d->m_matchingVertextoEntity[*itVisited]=vocabTags[result[i](j)];
+              m_d->m_matchingVertextoEntity[*itVisited]=m_d->m_vocabTags[result[i](j)];
               ++itVisited;
             }
           }
@@ -410,13 +409,6 @@ namespace TensorflowSpecificEntities
         //Continue to the next batch
       }
       
-      //6. Free any resources used by the session
-      *status=session->Close();
-      if (!status->ok()) {
-          TFSELOGINIT;
-          LERROR << status->ToString();
-          return UNKNOWN_ERROR;
-      }
       return SUCCESS_ID;
     }
 
@@ -494,6 +486,20 @@ namespace TensorflowSpecificEntities
       if (annotationData==0)
       {
         return false;
+      }
+      
+      // Do not create annotation if annotation of same type exists
+      if (entityFound.size() == 1){
+        std::set< AnnotationGraphVertex > matches = annotationData->matches(analysisGraph->getGraphId(),entityFound.getBegin(),"annot");
+        for (std::set< AnnotationGraphVertex >::const_iterator it = matches.begin();
+            it != matches.end(); it++) {
+          if (annotationData->hasAnnotation(*it, Common::Misc::utf8stdstring2limastring("SpecificEntity"))
+              && annotationData->annotation(*it,
+                                            Common::Misc::utf8stdstring2limastring("SpecificEntity"))
+              .pointerValue<SpecificEntityAnnotation>()->getType() == entityFound.getType() ) {
+            return false;
+          }
+        }
       }
       
       // Create a specific annotation
