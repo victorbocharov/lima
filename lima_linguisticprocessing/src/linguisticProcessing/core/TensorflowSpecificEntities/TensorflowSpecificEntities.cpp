@@ -66,6 +66,7 @@ namespace TensorflowSpecificEntities
     Session* m_session;
     std::shared_ptr<Status> m_status;
     GraphDef m_graphDef;
+    int m_batchSizeMax;
   };
   
   TensorflowSpecificEntitiesPrivate::TensorflowSpecificEntitiesPrivate(
@@ -161,6 +162,21 @@ namespace TensorflowSpecificEntities
       throw InvalidConfiguration();
     }
     
+    //Minibatching (group of max 20 sentences of different size) is used in order to amortize the cost of loading the network weights from CPU/GPU memory across many inputs.
+      //and to take advantage from parallelism.
+//     std::string::size_type sz;
+    try
+    {
+      std::string::size_type sz;
+      m_d->m_batchSizeMax = std::stoi(unitConfiguration.getParamsValueAtKey("batchSizeMax"),&sz); 
+    }
+    catch (NoSuchParam& )
+    {
+      LERROR << "no param 'batchSizeMax' in TensorflowSpecificEntities group for m_d->m_language " << (int) m_d->m_language;
+      throw InvalidConfiguration();
+    }
+    
+    
     try{
         m_d->m_vocabWords= loadFileWords(fileWords);
         if(m_d->m_vocabWords.empty()){
@@ -241,11 +257,6 @@ namespace TensorflowSpecificEntities
       AnalysisGraph* tokenList=static_cast<AnalysisGraph*>(analysis.getData("AnalysisGraph"));
       LinguisticGraph* g=tokenList->getGraph();
       VertexTokenPropertyMap tokenMap=get(vertex_token,*g);
-      
-      //Minibatching (group of max 20 sentences of different size) is used in order to amortize the cost of loading the network weights from CPU/GPU memory across many inputs.
-      //and to take advantage from parallelism.
-
-      int batchSizeMax = 20;
     
       //save LinguisticGraphVertex visited following sentences' order
       
@@ -256,13 +267,13 @@ namespace TensorflowSpecificEntities
       LinguisticGraphVertex endPrecedentSentence=boundItr->getFirstVertex(); 
       
       while(boundItr!=(sb->getSegments()).cend()){
-        std::vector<std::vector<int>> wordIds(batchSizeMax); //list of identifiers of each word in each sentence from the batch
-        std::vector<std::vector<std::vector<int>>> charIds(batchSizeMax);//list of identifiers of each character from each word in each sentence from the batch
+        std::vector<std::vector<int>> wordIds(m_d->m_batchSizeMax); //list of identifiers of each word in each sentence from the batch
+        std::vector<std::vector<std::vector<int>>> charIds(m_d->m_batchSizeMax);//list of identifiers of each character from each word in each sentence from the batch
         int batchSize =0;
         m_d->m_visitedVertex.erase(m_d->m_visitedVertex.begin(),m_d->m_visitedVertex.end());
         m_d->m_matchingVertextoEntity.erase(m_d->m_matchingVertextoEntity.begin(),m_d->m_matchingVertextoEntity.end());
         
-        while(batchSize<batchSizeMax && boundItr!=(sb->getSegments()).cend()){
+        while(batchSize<m_d->m_batchSizeMax && boundItr!=(sb->getSegments()).cend()){
           m_d->m_visitedVertex.reserve(boundItr->getLength()+m_d->m_visitedVertex.size());
           QStringList wordsRaw; //batch of sentences
           
@@ -353,8 +364,8 @@ namespace TensorflowSpecificEntities
         
         
     
-        //3.Resize data if current batch size is fewer than batchSizeMax
-        if(batchSize<batchSizeMax){
+        //3.Resize data if current batch size is fewer than m_d->m_batchSizeMax
+        if(batchSize<m_d->m_batchSizeMax){
           wordIds.resize(batchSize);
           charIds.resize(batchSize);
         }

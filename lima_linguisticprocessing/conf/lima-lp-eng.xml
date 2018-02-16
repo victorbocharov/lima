@@ -4,6 +4,7 @@
     <group name="include">
       <list name="includeList">
         <item value="SpecificEntities-modex.xml/entities"/>
+        <!--item value="SpecificEntities-modex-tf.xml/entities"/-->
       </list>
     </group>
 </module>
@@ -68,6 +69,58 @@
         <!--item value="afterFusionXmlDumper"/-->
       </list>
     </group>
+    <group name="deep" class="ProcessUnitPipeline">
+      <list name="processUnitSequence">
+        <item value="flattokenizer"/>
+        <item value="regexmatcher"/>
+        <!--item value="fullTokenXmlLoggerTokenizer"/-->
+        <item value="simpleWord"/>
+        <item value="sentenceBoundariesFinderForSE"/>
+        <item value="tensorflowSpecificEntities"/>
+        <!--item value="dotGraphWriter-forCorefEval"/-->
+        <!--item value="fullTokenXmlLoggerSimpleWord"/-->
+        <item value="idiomaticAlternatives"/>
+        <!--item value="fullTokenXmlLoggerIdiomatic"/-->
+        <item value="hyphenWordAlternatives"/>
+        <!--item value="fullTokenXmlLoggerHyphen"/-->
+        <item value="abbreviationSplitAlternatives"/>
+        <!--item value="fullTokenXmlLoggerAbbreviations"/-->
+        <item value="defaultProperties"/>
+        <!--item value="fullTokenXmlLoggerDefaultProperties"/-->
+        <!--item value="SpecificEntitiesModex"/-->
+        <!--item value="specificEntitiesXmlLogger"/-->
+        <!--item value="dotGraphWriter-beforepos"/-->
+        <item value="viterbiPostagger-freq"/>
+        <!--item value="SvmToolPosTagger"/-->
+        <!--item value="DynamicSvmToolPosTagger"/-->
+        <!--item value="disambiguatedGraphXmlLogger"/-->
+        <!--item value="dotGraphWriter"/-->
+        <item value="sentenceBoundariesFinder"/>
+        <item value="syntacticAnalyzerChains"/>
+        <item value="syntacticAnalyzerSimplify"/>
+        <item value="syntacticAnalyzerSimplifyQuotes"/>
+        <item value="syntacticAnalyzerDeps"/>
+        <item value="syntacticAnalyzerDepsHetero"/>
+        <item value="syntacticAnalyzerFinalize"/>
+        <item value="syntacticAnalyzerDummy"/>
+        <!--item value="dotDepGraphWriter"/-->
+        <!--item value="coreferencesSolving"/--> 
+        <!--item value="annotDotGraphWriter"/-->
+        <!--item value="depTripletLogger"/-->
+        <!--item value="corefLogger" /-->
+        <!-- VerbNetRecognition is a fake/empty modex allowing to define VerbNet entity types -->
+        <!--item value="VerbNetRecognition"/-->
+        <!--item value="VerbNetRecognition"/-->
+        <!--item value="kbsrl"/-->
+        <item value="conllDumper"/>
+        <!--item value="bowDumper"/-->
+        <!--item value="textDumper"/-->
+        <!--item value="fullXmlDumper"/-->
+        <!--item value="NullDumper"/-->
+        <!--item value="temporalXmlDumper"/-->
+        <!--item value="afterFusionXmlDumper"/-->
+      </list>
+    </group>
     <group name="limaserver" class="ProcessUnitPipeline" >
       <list name="processUnitSequence">
         <item value="flattokenizer"/>
@@ -78,6 +131,7 @@
         <item value="SpecificEntitiesModexForLimaserver"/>
         <item value="specificEntitiesXmlLoggerForLimaserver"/>
       </list>
+
     </group>
     <group name="query" class="ProcessUnitPipeline">
       <list name="processUnitSequence">
@@ -276,6 +330,13 @@
         <param key="confidentMode" value="true"/>
         <param key="charChart" value="flatcharchart"/>
         <param key="parseConcatenated" value="true"/>
+    </group>
+    <group name="tensorflowSpecificEntities" class="TensorflowSpecificEntities">
+      <param key="graphOutputFile" value="TensorFlowSpecificEntities/eng/IOB1/output_graph.pb"/>
+      <param key="charValuesFile" value="TensorFlowSpecificEntities/eng/IOB1/chars.txt"/>
+      <param key="wordValuesFile" value="TensorFlowSpecificEntities/eng/IOB1/words.txt"/>
+      <param key="tagValuesFile" value="TensorFlowSpecificEntities/eng/IOB1/tags.txt"/>
+      <param key="batchSizeMax" value="20"/>
     </group>
     <!-- deprecated -->
     <!--group name="idiomaticAlternatives" class="IdiomaticAlternatives">
