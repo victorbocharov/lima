@@ -1,13 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <modulesConfig>
-<module name="entities">
+  <module name="entities">
     <group name="include">
       <list name="includeList">
         <item value="SpecificEntities-modex.xml/entities"/>
-        <!--item value="SpecificEntities-modex-tf.xml/entities"/-->
       </list>
     </group>
-</module>
+  </module>
   <module name="Processors">
     <group name="include">
       <list name="includeList">
@@ -517,6 +516,13 @@
     <group name="sentenceBoundariesFinder" class="SentenceBoundariesFinder">
       <param key="graph" value="PosGraph"/>
       <param key="data" value="SentenceBoundaries"/>
+      <list name="micros">
+        <item value="SENT"/>
+      </list>
+    </group>
+     <group name="sentenceBoundariesFinderForSE" class="SentenceBoundariesFinder">
+      <param key="graph" value="AnalysisGraph"/>
+      <param key="data" value="SentenceBoundariesForSE"/>
       <list name="micros">
         <item value="SENT"/>
       </list>

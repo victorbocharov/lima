@@ -4,7 +4,6 @@
     <group name="include">
       <list name="includeList">
         <item value="SpecificEntities-modex.xml/entities"/>
-        <!--item value="SpecificEntities-modex-tf.xml/entities"/-->
       </list>
     </group>
   </module>
@@ -413,6 +412,13 @@
       <param key="graph" value="PosGraph"/>
       <list name="micros">
         <item value="PONCTU_FORTE" />  
+      </list>
+    </group>
+    <group name="sentenceBoundariesFinderForSE" class="SentenceBoundariesFinder">
+      <param key="graph" value="AnalysisGraph"/>
+      <param key="data" value="SentenceBoundariesForSE"/>
+      <list name="micros">
+        <item value="SENT"/>
       </list>
     </group>
     <group name="syntacticAnalyzerChains" class="SyntacticAnalyzerChains">
