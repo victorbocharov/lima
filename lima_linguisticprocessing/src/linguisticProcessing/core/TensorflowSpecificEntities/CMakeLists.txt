@@ -69,5 +69,5 @@ install(FILES
 install(FILES
   logTensorflowSpecificEntitiescpp.properties
   DESTINATION share/config/lima
-  COMPONENT log
+  COMPONENT runtime
 )
