@@ -158,6 +158,7 @@ bool DynamicLibrariesManager::loadLibrary(const std::string& libName)
 {
   ABSTRACTFACTORYPATTERNLOGINIT;
   LDEBUG << "DynamicLibrariesManager::loadLibrary() -- libName=" << libName;
+  std::cerr << "DynamicLibrariesManager::loadLibrary() -- libName=" << libName << std::endl;
 
   if (m_d->isSomethingSimilarLoaded(libName))
   {
@@ -219,6 +220,7 @@ bool DynamicLibrariesManager::loadLibrary(const std::string& libName)
       ABSTRACTFACTORYPATTERNLOGINIT;
       LERROR << "DynamicLibrariesManager::loadLibrary() -- "
              << "Failed to open system lib " << libhandle->errorString();
+      std::cerr << "DynamicLibrariesManager::loadLibrary() -- " << "Failed to open system lib " << libhandle->errorString() << std::endl;
       return false;
     }
   }
