@@ -220,7 +220,7 @@ bool DynamicLibrariesManager::loadLibrary(const std::string& libName)
       ABSTRACTFACTORYPATTERNLOGINIT;
       LERROR << "DynamicLibrariesManager::loadLibrary() -- "
              << "Failed to open system lib " << libhandle->errorString();
-      std::cerr << "DynamicLibrariesManager::loadLibrary() -- " << "Failed to open system lib " << libhandle->errorString() << std::endl;
+      std::cerr << "DynamicLibrariesManager::loadLibrary() -- " << "Failed to open system lib " << libhandle->errorString().toUtf8().data() << std::endl;
       return false;
     }
   }
