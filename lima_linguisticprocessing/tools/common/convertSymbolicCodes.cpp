@@ -120,7 +120,7 @@ int run(int argc, char** argv)
     exit(0);
   }
 
-  std::string resourcesPath = (getenv("LIMA_RESOURCES")!=0) ? string(getenv("LIMA_RESOURCES")) : string("/usr/share/apps/lima/resources");
+  //std::string resourcesPath = (getenv("LIMA_RESOURCES")!=0) ? string(getenv("LIMA_RESOURCES")) : string("/usr/share/apps/lima/resources");
   std::string configPath = (param->configDir.size()>0) ? param->configDir : string("");
   if (configPath.size() == 0)
     configPath = string(getenv("LIMA_CONF"));
@@ -133,6 +133,8 @@ int run(int argc, char** argv)
     LERROR << "Call to QsLogging::initQsLog(\"" << configPath << "\") failed.";
     return EXIT_FAILURE;
   }
+
+  std::cerr << "convertSymbolicCodes " << configPath << " " << std::endl;
 
   // Necessary to initialize factories
   Lima::AmosePluginsManager::single();

@@ -176,6 +176,8 @@ int run(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
+  std::cerr << "parseXMLPropertyFile: " << configPath << " " << resourcesPath << std::endl;
+
   if (param->codeFile == "")
   {
     if (param->language == "")
@@ -184,6 +186,7 @@ int run(int argc, char** argv)
       exit(1);
     }
     param->codeFile=resourcesPath+"/LinguisticProcessings/"+param->language+"/code-"+param->language+".xml";
+    cerr << "using default codefile: " << param->codeFile << endl;
   }
 
   // Necessary to initialize factories
