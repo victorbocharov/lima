@@ -34,6 +34,8 @@ macro (CODES _lang)
     set(CODES_FILES ${CODES_FILES} ${CODE_FILE})
   endforeach(CODE_FILE ${ARGN})
 
+  message("PATH = $ENV{PATH}")
+
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/convjys.txt
     COMMAND convertSymbolicCodes --configDir=${CMAKE_SOURCE_DIR}/lima_common/conf/ --code=code-${_lang}.xml --output=${CMAKE_CURRENT_BINARY_DIR}/convjys.txt ${CODES_FILES}
