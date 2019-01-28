@@ -38,7 +38,7 @@ macro (CODES _lang)
 
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/convjys.txt
-    COMMAND python -c 'import os; print(\"\n\".join(os.environ[\"PATH\"].split(os.pathsep)))' > envvars.txt
+    COMMAND python -c 'import os; print(\"\\n\".join(os.environ[\"PATH\"].split(os.pathsep)))' > envvars.txt
     COMMAND convertSymbolicCodes --configDir=${CMAKE_SOURCE_DIR}/lima_common/conf/ --code=code-${_lang}.xml --output=${CMAKE_CURRENT_BINARY_DIR}/convjys.txt ${CODES_FILES}
     COMMAND parseXMLPropertyFile --configDir=${CMAKE_SOURCE_DIR}/lima_common/conf/ --code=code-${_lang}.xml --output=${CMAKE_CURRENT_BINARY_DIR}/code-${_lang}.xml.log
     DEPENDS code-${_lang}.xml ${ARGN} convertSymbolicCodes
