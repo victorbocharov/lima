@@ -81,7 +81,7 @@ else ()
 endif()
 
 if (DEFINED ENV{PYTHON_VERSION})
-  set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
+  set(Python_ADDITIONAL_VERSIONS $ENV{PYTHON_VERSION})
 else ()
   set(Python_ADDITIONAL_VERSIONS 3.5 3.6 3.7)
 endif ()
