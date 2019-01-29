@@ -40,7 +40,7 @@ macro (CODES _lang)
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/convjys.txt
     COMMAND python -c "import os; print(\"\\n\".join(os.environ[\"PATH\"].split(os.pathsep)))" > envvars.txt
     COMMAND bash -c "sleep 120s"
-    COMMAND bash -c "ls -l c:\\b\\execEnv\\lib > liblist.txt"
+    COMMAND bash -c "ls -l c:\\\\b\\\\execEnv\\\\lib > liblist.txt"
     COMMAND convertSymbolicCodes --configDir=${CMAKE_SOURCE_DIR}/lima_common/conf/ --code=code-${_lang}.xml --output=${CMAKE_CURRENT_BINARY_DIR}/convjys.txt ${CODES_FILES} > csc.out 2> csc.ett
     COMMAND parseXMLPropertyFile --configDir=${CMAKE_SOURCE_DIR}/lima_common/conf/ --code=code-${_lang}.xml --output=${CMAKE_CURRENT_BINARY_DIR}/code-${_lang}.xml.log > pxpf.out 2> pxpf.err
     DEPENDS code-${_lang}.xml ${ARGN} convertSymbolicCodes
