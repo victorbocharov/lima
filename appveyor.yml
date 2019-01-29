@@ -21,7 +21,7 @@ environment:
 
   matrix:
     - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.x"
+      PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
       PATH: "%PYTHON%;%PYTHON%\\libs;c:\\b\\execEnv\\lib;%Qt5_INSTALL_DIR%\\bin;%BOOST_LIBRARYDIR%;c:\\msys64\\usr\\bin;%PATH%"
 
@@ -71,9 +71,9 @@ build_script:
   - echo %BOOST_LIBRARYDIR%
   - echo %PATH%
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-  - cmake -G "Ninja" "-DCMAKE_PREFIX_PATH=%QTDIR%;%BOOST_ROOT%" "-DLIMA_RESOURCES=build" "-DLIMA_VERSION_RELEASE:STRING=%LIMA_VERSION_RELEASE%" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DCMAKE_INSTALL_PREFIX=c:\d" "-DBOOST_ROOT:STRING=%BOOST_ROOT%" "-DBOOST_LIBRARYDIR:STRING=%BOOST_LIBRARYDIR%" -DPYTHON_LIBRARY=%PYTHON%/libs -DPYTHON_INCLUDE_DIR=%PYTHON%/include -DCMAKE_IGNORE_PATH="C:/msys64/usr/bin" c:/projects/lima
+  - cmake -G "Ninja" "-DCMAKE_PREFIX_PATH=%QTDIR%;%BOOST_ROOT%" "-DLIMA_RESOURCES=build" "-DLIMA_VERSION_RELEASE:STRING=%LIMA_VERSION_RELEASE%" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DCMAKE_INSTALL_PREFIX=c:\d" "-DBOOST_ROOT:STRING=%BOOST_ROOT%" "-DBOOST_LIBRARYDIR:STRING=%BOOST_LIBRARYDIR%" -DCMAKE_IGNORE_PATH="C:/msys64/usr/bin" c:/projects/lima
   - cmake --build . --config RelWithDebInfo -- -v
-  
+
 after_build:
   - cmake --build . --config RelWithDebInfo --target install
   - cmake --build . --config RelWithDebInfo --target package
@@ -89,7 +89,7 @@ after_build:
   - ps: popd
 
 
-artifacts: 
+artifacts:
   - path: lima*.exe
     name: packages
 
