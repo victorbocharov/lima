@@ -180,7 +180,7 @@ bool DynamicLibrariesManager::loadLibrary(const std::string& libName)
   for (auto it = m_d->m_supplementarySearchPath.begin();
        it != m_d->m_supplementarySearchPath.end(); it++)
   {
-    LDEBUG << "Trying supplementary " << ((*it)+"/"+libName).c_str();
+    LERROR << "Trying supplementary " << ((*it)+"/"+libName).c_str();
     libhandle = std::shared_ptr<QLibrary>(new QLibrary( ((*it)+"/"+libName).c_str() ));
     libhandle->setLoadHints(QLibrary::ResolveAllSymbolsHint
                           | QLibrary::ExportExternalSymbolsHint);
