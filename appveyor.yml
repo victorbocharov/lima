@@ -70,7 +70,7 @@ install:
   # Install Ninja
   ############################################################################
   - ps: appveyor DownloadFile https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip -FileName ninja.zip
-  - ps: 7z x ninja.zip -oC:\externals\ninja > nul
+  - ps: 7z x ninja.zip -oC:\externals\ninja | Out-Null
   - ps: set PATH=C:\externals\ninja;%PATH%
   - ps: ninja --version
 
