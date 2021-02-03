@@ -65,7 +65,7 @@
           right="street"/>
   </testcase>
   <!-- test "Governor of Oklahoma"-->
-  <testcase id="eng.se.pers.embed.10" type="bloquant">
+  <!--testcase id="eng.se.pers.embed.10" type="bloquant">
     <call-parameters>
       <param key="text" value="Governor of Oklahoma"/>
       <param key="language" value="eng"/>
@@ -88,7 +88,7 @@
           left="XPATH#//entities/entity[pos=1]/components/entity[pos=13]/string"
           operator="="
           right="Oklahoma"/>
-  </testcase>
+  </testcase-->
   <!-- test relation family "-->
   <!-- test "daughter of Barack Obama"-->
   <testcase id="eng.se.pers.embed.11" type="bloquant">
