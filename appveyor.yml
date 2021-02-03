@@ -1,18 +1,142 @@
-image: Ubuntu2004
+image:
+  - Visual Studio 2017
+  - Ubuntu2004
 
-services:
-- docker
+init:
+ - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+branches:
+  only:
+  - master
+
+environment:
+  APPVEYOR_YML_DISABLE_PS_LINUX: true
+  LIMA_DIST: c:\d
+  LIMA_EXTERNALS: c:/d
+  LIMA_CONF: 'c:\b\execEnv\config'
+  LIMA_RESOURCES: 'c:\b\execEnv\resources'
+  #Qt5_INSTALL_DIR: 'C:\Qt\5.15.0\msvc2019_64'
+  Qt5_INSTALL_DIR: 'C:\Qt\5.13.2\msvc2017_64'
+  #BOOST_ROOT: 'C:\Libraries\boost_1_71_0'
+  BOOST_ROOT: 'C:\Libraries\boost_1_69_0'
+  #BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_71_0\lib64-msvc-14.2'
+  BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_69_0\lib64-msvc-14.1'
+  PATH: 'C:\b\execEnv\lib;%Qt5_INSTALL_DIR%\bin;%BOOST_LIBRARYDIR%;c:\msys64\usr\bin;%PATH%'
+  LIMA_DISABLE_FSW_TESTING: true
+  NLTK_PTB_DP_DIR: 'c:\dependency_treebank'
+  NLTK_PTB_DP_FILE: 'c:\dependency_treebank\nltk-ptb.dp'
+  GITHUB_OAUTH_TOKEN:
+    secure: 01sh5OxKgkUJbTt/ldX/duLQk6iP28Iwet3reW8FK8f7Z3xiM2RLHQUwOzZye4qs
+
+  matrix:
+    - PYTHON: "C:\\Python38-x64"
+      PYTHON_VERSION: "3.8"
+      PYTHON_ARCH: "64"
+      PATH: "%PYTHON%;%PYTHON%\\libs;c:\\b\\execEnv\\lib;%Qt5_INSTALL_DIR%\\bin;%BOOST_LIBRARYDIR%;c:\\msys64\\usr\\bin;%PATH%"
+
+for:
+-
+  matrix:
+    only:
+      - image: Ubuntu2004
+
+  services:
+    - docker
+
+  build_script:
+    - docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
+
+configuration: Release
+
+#os: Visual Studio 2019
+os: Visual Studio 2017
+#os: Visual Studio 2015
+#os: Visual Studio 2013
 
 install:
--  docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
+  # Prepend chosen Python to the PATH of this build
+  - ps: "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  # Check that we have the expected version and architecture for Python
+  - ps: "python --version"
+  - ps: "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-build: off
+  ############################################################################
+  # All external dependencies are installed in C:\externals
+  ############################################################################
+  - ps: mkdir C:\externals
+  - ps: cd C:\externals
 
-test_script:
-- echo "Test script" 
+  ############################################################################
+  # Install Ninja
+  ############################################################################
+  - ps: appveyor DownloadFile https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip -FileName ninja.zip
+  - ps: 7z x ninja.zip -oC:\externals\ninja > nul
+  - ps: set PATH=C:\externals\ninja;%PATH%
+  - ps: ninja --version
 
-on_success:
-- echo "Success"
+  - ps: (new-object net.webclient).DownloadFile('http://www.nltk.org/nltk_data/packages/corpora/dependency_treebank.zip', 'c:\dependency_treebank.zip')
+  - ps: mkdir c:\dependency_treebank
+  - ps: unzip c:\dependency_treebank.zip -d c:\
+  - ps: cd c:\
+  - ps: c:\msys64\usr\bin\cat /c/dependency_treebank/wsj_*.dp | c:\msys64\usr\bin\grep -v "^$" > c:\dependency_treebank\nltk-ptb.dp
+
+build_script:
+  - ps: pushd c:/projects/lima
+  - ps: git submodule init
+  - ps: git submodule update
+  - ps: "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+  - ps: (New-Object System.Net.WebClient).DownloadFile("https://github.com/aymara/qhttpserver/releases/download/20180703132951-64591f4d/qhttpserver-0.0.20180703132951-64591f4d-win64.exe","c:/projects/lima/qhttpserver.exe")
+  - ps: qhttpserver.exe /S /NCRC /D=c:\d
+  - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
+  - ps: echo %LIMA_VERSION_RELEASE%
+  - ps: popd
+  - ps: mkdir c:\b
+  - ps: cd c:\b
+  - ps: echo %BOOST_ROOT%
+  - ps: echo %BOOST_LIBRARYDIR%
+  - ps: echo %PATH%
+  #- call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
+  - ps: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  #- cmake -G "Ninja" "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DLIMA_RESOURCES=build" "-DLIMA_VERSION_RELEASE:STRING=%LIMA_VERSION_RELEASE%" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DCMAKE_INSTALL_PREFIX=c:\d" "-DBoost_DEBUG=ON" "-DBoost_COMPILER=-vc142" "-DBOOST_LIBRARYDIR:STRING=%BOOST_LIBRARYDIR%" -DCMAKE_IGNORE_PATH="C:/msys64/usr/bin" c:/projects/lima
+  - ps: cmake -G "Ninja" "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DLIMA_RESOURCES=build" "-DLIMA_VERSION_RELEASE:STRING=%LIMA_VERSION_RELEASE%" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DCMAKE_INSTALL_PREFIX=c:\d" "-DBoost_DEBUG=ON" "-DBoost_COMPILER=-vc141" "-DBOOST_LIBRARYDIR:STRING=%BOOST_LIBRARYDIR%" -DCMAKE_IGNORE_PATH="C:/msys64/usr/bin" c:/projects/lima
+  - ps: cmake --build . --config Release
+
+after_build:
+  - ps: cmake --build . --config Release --target install
+  - ps: cmake --build . --config Release --target package
+  - ps: ls C:/d/share/apps/lima/tests
+  - ps: pushd C:/d/share/apps/lima/tests
+  - ps: $env:Path = "c:/d/bin;$env:Path"
+  - ps: $env:LIMA_CONF = "C:/d/share/config/lima"
+  - ps: $env:LIMA_RESOURCES = "C:/d/share/apps/lima/resources"
+  - ps: tva --language=eng test-eng.tokenizer.xml test-eng.simpleword.xml test-eng.idiom.xml test-eng.abbrev.xml test-eng.hyphen.xml test-eng.default.xml test-eng.se-PERSON.xml test-eng.se-DATE.xml test-eng.se-EMBEDED.xml test-eng.se-ORGANISATION.xml test-eng.se.xml test-eng.se-LOCATION.xml test-eng.disambiguated.xml test-eng.sa.xml 2>&1 | tee tva-eng.log
+  - ps: cat tva-eng.log
+  - ps: tva --language=fre test-fre.tokenizer.xml test-fre.simpleword.xml test-fre.hyphen.xml test-fre.idiom.xml test-fre.default.xml test-fre.se.xml test-fre.disambiguated.xml test-fre.sa.xml 2>&1 | tee tva-fre.log
+  - ps: cat tva-fre.log
+  - ps: popd
+  - ps: pushd C:\b
+  - ps: copy lima*.exe %APPVEYOR_BUILD_FOLDER%
+  - ps: popd
+
+
+artifacts:
+  - path: lima*.exe
+    name: packages
+
+deploy:
+  description: '$(LIMA_VERSION_RELEASE)'
+  provider: GitHub
+  tag: $(LIMA_VERSION_RELEASE)
+  auth_token:
+    secure: 01sh5OxKgkUJbTt/ldX/duLQk6iP28Iwet3reW8FK8f7Z3xiM2RLHQUwOzZye4qs
+  artifact: packages
+  force_update: true
+  on:
+    branch: master                 # release from master branch only
+    APPVEYOR_REPO_TAG: false       # deploy on non tag push only
+
+#on_success:
+         #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 on_failure:
-- echo "Failure"
+         - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
