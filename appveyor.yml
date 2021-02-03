@@ -55,7 +55,7 @@ os: Visual Studio 2017
 
 install:
   # Prepend chosen Python to the PATH of this build
-  - ps: "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - ps: $env:Path = "$env:PYTHON;$env:PYTHON\\Scripts;$env:Path"
   # Check that we have the expected version and architecture for Python
   - ps: "python --version"
   - ps: "python -c \"import struct; print(struct.calcsize('P') * 8)\""
