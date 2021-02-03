@@ -71,7 +71,7 @@ install:
   ############################################################################
   - ps: appveyor DownloadFile https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip -FileName ninja.zip
   - ps: 7z x ninja.zip -oC:\externals\ninja | Out-Null
-  - ps: set PATH=C:\externals\ninja;%PATH%
+  - ps: $env:Path = "C:\\externals\\ninja;$env:Path"
   - ps: ninja --version
 
   - ps: (new-object net.webclient).DownloadFile('http://www.nltk.org/nltk_data/packages/corpora/dependency_treebank.zip', 'c:\dependency_treebank.zip')
