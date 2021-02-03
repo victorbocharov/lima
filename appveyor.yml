@@ -81,7 +81,7 @@ install:
   - ps: c:\msys64\usr\bin\cat /c/dependency_treebank/wsj_*.dp | c:\msys64\usr\bin\grep -v "^$" > c:\dependency_treebank\nltk-ptb.dp
 
 build_script:
-  - ps: pushd c:/projects/lima
+  - ps: Push-Location c:\projects\lima
   - ps: git submodule init
   - ps: git submodule update
   - ps: "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
@@ -89,7 +89,7 @@ build_script:
   - ps: qhttpserver.exe /S /NCRC /D=c:\d
   - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
   - ps: echo %LIMA_VERSION_RELEASE%
-  - ps: popd
+  - ps: Pop-Location
   - ps: mkdir c:\b
   - ps: cd c:\b
   - ps: echo %BOOST_ROOT%
@@ -104,8 +104,8 @@ build_script:
 after_build:
   - ps: cmake --build . --config Release --target install
   - ps: cmake --build . --config Release --target package
-  - ps: ls C:/d/share/apps/lima/tests
-  - ps: pushd C:/d/share/apps/lima/tests
+  - ps: ls C:\d\share\apps\lima\tests
+  - ps: Push-Location C:\d\share\apps\lima\tests
   - ps: $env:Path = "c:/d/bin;$env:Path"
   - ps: $env:LIMA_CONF = "C:/d/share/config/lima"
   - ps: $env:LIMA_RESOURCES = "C:/d/share/apps/lima/resources"
@@ -113,10 +113,10 @@ after_build:
   - ps: cat tva-eng.log
   - ps: tva --language=fre test-fre.tokenizer.xml test-fre.simpleword.xml test-fre.hyphen.xml test-fre.idiom.xml test-fre.default.xml test-fre.se.xml test-fre.disambiguated.xml test-fre.sa.xml 2>&1 | tee tva-fre.log
   - ps: cat tva-fre.log
-  - ps: popd
-  - ps: pushd C:\b
+  - ps: Pop-Location
+  - ps: Push-Location C:\b
   - ps: copy lima*.exe %APPVEYOR_BUILD_FOLDER%
-  - ps: popd
+  - ps: Pop-Location
 
 
 artifacts:
