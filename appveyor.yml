@@ -37,17 +37,19 @@ environment:
 for:
 -
   matrix:
-    - image: Ubuntu2004
-      services:
-       - docker
-      build_script:
-       - docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
+    only:
+      - image: Ubuntu2004
+    services:
+      - docker
+    build_script:
+      - docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
 
-    - image: Visual Studio 2017
-      build_script:
-        - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
-        - ps: echo %LIMA_VERSION_RELEASE%
-        - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_build.bat"
+    only:
+      - image: Visual Studio 2017
+    build_script:
+      - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
+      - ps: echo %LIMA_VERSION_RELEASE%
+      - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_build.bat"
 
 configuration: Release
 
