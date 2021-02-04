@@ -1,3 +1,4 @@
+echo %1
 cmake --build . --config Release --target install
 cmake --build . --config Release --target package
 dir C:/d/share/apps/lima/tests
