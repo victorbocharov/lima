@@ -44,6 +44,9 @@ for:
     build_script:
       - docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
 
+for:
+-
+  matrix:
     only:
       - image: Visual Studio 2017
     build_script:
