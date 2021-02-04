@@ -18,16 +18,15 @@ environment:
 
 for:
   - matrix:
-    only:
-      - job_name: Ubuntu 20.04
+      only:
+        - job_name: Ubuntu 20.04
     services:
       - docker
     build_script:
       - docker build --tag travis-ubuntu20.04 --build-arg JOB_NUMBER=1 --build-arg BRANCH="master" --build-arg USE_TENSORFLOW="true" -f ./continuous_integration/Dockerfile-travis-ubuntu20.04 .
-
   - matrix:
-    only:
-      - job_name: Visual Studio 2017
+      only:
+        - job_name: Visual Studio 2017
     environment:
       APPVEYOR_YML_DISABLE_PS_LINUX: true
       LIMA_DIST: c:\d
