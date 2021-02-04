@@ -54,6 +54,10 @@ for:
       - ps: echo %LIMA_VERSION_RELEASE%
       - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_build.bat"
 
+    after_build:
+      - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_after_build.bat"
+
+
 configuration: Release
 
 #os: Visual Studio 2019
@@ -72,24 +76,6 @@ install:
 #  - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
 #  - ps: echo %LIMA_VERSION_RELEASE%
 #  - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_build.bat"
-
-after_build:
-  - ps: cmd /c 'cmake --build . --config Release --target install 2>&1'
-  - ps: cmd /c 'cmake --build . --config Release --target package 2>&1'
-  - ps: ls C:\d\share\apps\lima\tests
-  - ps: Push-Location C:\d\share\apps\lima\tests
-  - ps: $env:Path = "c:/d/bin;$env:Path"
-  - ps: $env:LIMA_CONF = "C:/d/share/config/lima"
-  - ps: $env:LIMA_RESOURCES = "C:/d/share/apps/lima/resources"
-  - ps: cmd /c 'tva --language=eng test-eng.tokenizer.xml test-eng.simpleword.xml test-eng.idiom.xml test-eng.abbrev.xml test-eng.hyphen.xml test-eng.default.xml test-eng.se-PERSON.xml test-eng.se-DATE.xml test-eng.se-EMBEDED.xml test-eng.se-ORGANISATION.xml test-eng.se.xml test-eng.se-LOCATION.xml test-eng.disambiguated.xml test-eng.sa.xml 2>&1 | tee tva-eng.log'
-  - ps: cat tva-eng.log
-  - ps: cmd /c 'tva --language=fre test-fre.tokenizer.xml test-fre.simpleword.xml test-fre.hyphen.xml test-fre.idiom.xml test-fre.default.xml test-fre.se.xml test-fre.disambiguated.xml test-fre.sa.xml 2>&1 | tee tva-fre.log'
-  - ps: cat tva-fre.log
-  - ps: Pop-Location
-  - ps: Push-Location C:\b
-  - ps: copy lima*.exe %APPVEYOR_BUILD_FOLDER%
-  - ps: Pop-Location
-
 
 artifacts:
   - path: lima*.exe
