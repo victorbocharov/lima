@@ -19,7 +19,6 @@ for:
       only:
         - job_name: Visual Studio 2017
     environment:
-      APPVEYOR_YML_DISABLE_PS_LINUX: true
       LIMA_DIST: c:\d
       LIMA_EXTERNALS: c:/d
       LIMA_CONF: 'c:\b\execEnv\config'
@@ -55,11 +54,11 @@ for:
 
     build_script:
       - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
-      - ps: echo %LIMA_VERSION_RELEASE%
+      - ps: echo $env:LIMA_VERSION_RELEASE
       - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_build.bat"
 
     after_build:
-      - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_after_build.bat"
+      - ps: Invoke-BatchFile "c:\\projects\\lima\\continuous_integration\\appveyor_win_after_build.bat" $env:APPVEYOR_BUILD_FOLDER
 
     artifacts:
       - path: lima*.exe
