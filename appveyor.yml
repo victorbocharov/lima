@@ -1,7 +1,6 @@
-image:
-  matrix:
-    - Ubuntu2004
-    - Visual Studio 2017
+#image:
+#  - Ubuntu2004
+#  - Visual Studio 2017
 
 init:
  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
@@ -11,34 +10,16 @@ init:
 #  - master
 
 environment:
-  APPVEYOR_YML_DISABLE_PS_LINUX: true
-  LIMA_DIST: c:\d
-  LIMA_EXTERNALS: c:/d
-  LIMA_CONF: 'c:\b\execEnv\config'
-  LIMA_RESOURCES: 'c:\b\execEnv\resources'
-  #Qt5_INSTALL_DIR: 'C:\Qt\5.15.0\msvc2019_64'
-  Qt5_INSTALL_DIR: 'C:\Qt\5.13.2\msvc2017_64'
-  #BOOST_ROOT: 'C:\Libraries\boost_1_71_0'
-  BOOST_ROOT: 'C:\Libraries\boost_1_69_0'
-  #BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_71_0\lib64-msvc-14.2'
-  BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_69_0\lib64-msvc-14.1'
-  PATH: 'C:\b\execEnv\lib;%Qt5_INSTALL_DIR%\bin;%BOOST_LIBRARYDIR%;c:\msys64\usr\bin;%PATH%'
-  LIMA_DISABLE_FSW_TESTING: true
-  NLTK_PTB_DP_DIR: 'c:\dependency_treebank'
-  NLTK_PTB_DP_FILE: 'c:\dependency_treebank\nltk-ptb.dp'
-  GITHUB_OAUTH_TOKEN:
-    secure: 01sh5OxKgkUJbTt/ldX/duLQk6iP28Iwet3reW8FK8f7Z3xiM2RLHQUwOzZye4qs
-
   matrix:
-    - PYTHON: "C:\\Python38-x64"
-      PYTHON_VERSION: "3.8"
-      PYTHON_ARCH: "64"
-      PATH: "%PYTHON%;%PYTHON%\\libs;c:\\b\\execEnv\\lib;%Qt5_INSTALL_DIR%\\bin;%BOOST_LIBRARYDIR%;c:\\msys64\\usr\\bin;%PATH%"
+  - job_name: Visual Studio 2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - job_name: Ubuntu 20.04
+    APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
 
 for:
   - matrix:
     only:
-      - image: Ubuntu2004
+      - job_name: Ubuntu 20.04
     services:
       - docker
     build_script:
@@ -46,7 +27,30 @@ for:
 
   - matrix:
     only:
-      - image: Visual Studio 2017
+      - job_name: Visual Studio 2017
+    environment:
+      APPVEYOR_YML_DISABLE_PS_LINUX: true
+      LIMA_DIST: c:\d
+      LIMA_EXTERNALS: c:/d
+      LIMA_CONF: 'c:\b\execEnv\config'
+      LIMA_RESOURCES: 'c:\b\execEnv\resources'
+      #Qt5_INSTALL_DIR: 'C:\Qt\5.15.0\msvc2019_64'
+      Qt5_INSTALL_DIR: 'C:\Qt\5.13.2\msvc2017_64'
+      #BOOST_ROOT: 'C:\Libraries\boost_1_71_0'
+      BOOST_ROOT: 'C:\Libraries\boost_1_69_0'
+      #BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_71_0\lib64-msvc-14.2'
+      BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_69_0\lib64-msvc-14.1'
+      PATH: 'C:\b\execEnv\lib;%Qt5_INSTALL_DIR%\bin;%BOOST_LIBRARYDIR%;c:\msys64\usr\bin;%PATH%'
+      LIMA_DISABLE_FSW_TESTING: true
+      NLTK_PTB_DP_DIR: 'c:\dependency_treebank'
+      NLTK_PTB_DP_FILE: 'c:\dependency_treebank\nltk-ptb.dp'
+      GITHUB_OAUTH_TOKEN:
+        secure: 01sh5OxKgkUJbTt/ldX/duLQk6iP28Iwet3reW8FK8f7Z3xiM2RLHQUwOzZye4qs
+      #- PYTHON: "C:\\Python38-x64"
+      PYTHON_VERSION: "3.8"
+      PYTHON_ARCH: "64"
+      PATH: "%PYTHON%;%PYTHON%\\libs;c:\\b\\execEnv\\lib;%Qt5_INSTALL_DIR%\\bin;%BOOST_LIBRARYDIR%;c:\\msys64\\usr\\bin;%PATH%"
+       
     build_script:
       - ps: $env:LIMA_VERSION_RELEASE="$(git log --date=iso  -1 | grep Date | grep -Po "[1-9]\d{3}\-[0-1]\d-[0-3]\d +[0-2]\d:[0-6]\d:[0-6]\d" | sed -e 's/\+.*//' -e 's/[- :]//g')-$(git log --format=%h --abbrev=8 -1)"
       - ps: echo %LIMA_VERSION_RELEASE%
