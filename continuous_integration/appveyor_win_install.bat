@@ -3,7 +3,7 @@ set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
 
 rem # Check that we have the expected version and architecture for Python
 python --version
-python -c \"import struct; print(struct.calcsize('P') * 8)\"
+python -c "import struct; print(struct.calcsize('P') * 8)"
 
 rem ############################################################################
 rem # All external dependencies are installed in C:\externals
