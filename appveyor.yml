@@ -40,13 +40,12 @@ for:
       BOOST_ROOT: 'C:\Libraries\boost_1_69_0'
       #BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_71_0\lib64-msvc-14.2'
       BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_69_0\lib64-msvc-14.1'
-      PATH: 'C:\b\execEnv\lib;%Qt5_INSTALL_DIR%\bin;%BOOST_LIBRARYDIR%;c:\msys64\usr\bin;%PATH%'
       LIMA_DISABLE_FSW_TESTING: true
       NLTK_PTB_DP_DIR: 'c:\dependency_treebank'
       NLTK_PTB_DP_FILE: 'c:\dependency_treebank\nltk-ptb.dp'
       GITHUB_OAUTH_TOKEN:
         secure: 01sh5OxKgkUJbTt/ldX/duLQk6iP28Iwet3reW8FK8f7Z3xiM2RLHQUwOzZye4qs
-      #- PYTHON: "C:\\Python38-x64"
+      PYTHON: "C:\\Python38-x64"
       PYTHON_VERSION: "3.8"
       PYTHON_ARCH: "64"
       PATH: "%PYTHON%;%PYTHON%\\libs;c:\\b\\execEnv\\lib;%Qt5_INSTALL_DIR%\\bin;%BOOST_LIBRARYDIR%;c:\\msys64\\usr\\bin;%PATH%"
